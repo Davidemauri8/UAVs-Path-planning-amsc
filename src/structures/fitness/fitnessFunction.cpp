@@ -9,8 +9,7 @@ FitnessFunction::FitnessFunction(const std::vector<std::shared_ptr<Obstacle>>& o
 
 // F1: lunghezza totale del percorso
 double FitnessFunction::f1_pathLength(const PointsList& path) const {
-    // PointsList ha già totalDistance()
-    return const_cast<PointsList&>(path).totalDistance();
+    return path.totalDistance();
 }
 
 //F2: costo ostacoli 
@@ -18,8 +17,8 @@ double FitnessFunction::f2_threatCost(const PointsList& path) const {
     double total = 0.0;
 
     for (int i = 0; i + 1 < path.size(); ++i) {
-        Point A = const_cast<PointsList&>(path).extractPoint(i);
-        Point B = const_cast<PointsList&>(path).extractPoint(i + 1);
+        Point A(path.getX(i),   path.getY(i),   path.getZ(i),   -1);
+        Point B(path.getX(i+1), path.getY(i+1), path.getZ(i+1), -1);
 
         for (const auto& obs : obstacles_) {
             double cost = obs->segmentCost(A, B);
@@ -35,8 +34,8 @@ double FitnessFunction::f3_altitudeCost(const PointsList& path) const {
     double total = 0.0;
     double hMid  = (w_.hMin + w_.hMax) / 2.0;
 
-    for (int i = 0; i < const_cast<PointsList&>(path).size(); ++i) {
-        double h = const_cast<PointsList&>(path).getZ(i);
+    for (int i = 0; i < path.size(); ++i) {
+        double h = path.getZ(i);
 
         if (h < w_.hMin || h > w_.hMax)
             return INF; // fuori range → percorso illegale
@@ -48,16 +47,16 @@ double FitnessFunction::f3_altitudeCost(const PointsList& path) const {
 
 // ─── F4: smoothness (angoli di virata e salita) ───────────────────────────────
 double FitnessFunction::f4_smoothness(const PointsList& path) const {
-    if (const_cast<PointsList&>(path).size() < 3) return 0.0;
+    if (path.size() < 3) return 0.0;
 
     double sumPhi  = 0.0;
     double sumPsi  = 0.0;
     double prevPsi = 0.0;
 
-    for (int i = 0; i + 2 < const_cast<PointsList&>(path).size(); ++i) {
-        Point p0 = const_cast<PointsList&>(path).extractPoint(i);
-        Point p1 = const_cast<PointsList&>(path).extractPoint(i + 1);
-        Point p2 = const_cast<PointsList&>(path).extractPoint(i + 2);
+    for (int i = 0; i + 2 < path.size(); ++i) {
+        Point p0(path.getX(i),   path.getY(i),   path.getZ(i),   -1);
+        Point p1(path.getX(i+1), path.getY(i+1), path.getZ(i+1), -1);
+        Point p2(path.getX(i+2), path.getY(i+2), path.getZ(i+2), -1);
 
         Point v1 = p1 - p0;  // vettore primo segmento
         Point v2 = p2 - p1;  // vettore secondo segmento
@@ -87,7 +86,7 @@ double FitnessFunction::f4_smoothness(const PointsList& path) const {
 
 // ─── evaluate: assembla tutto ─────────────────────────────────────────────────
 double FitnessFunction::evaluate(const PointsList& path) const {
-    if (const_cast<PointsList&>(path).size() < 2) return INF;
+    if (path.size() < 2) return INF;
 
     // F2 e F3 prima: se illegale, esci subito senza calcolare il resto
     double f2 = f2_threatCost(path);

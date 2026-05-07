@@ -31,13 +31,10 @@ public:
     //Estrarre tutti i punti appartenenti ad un cluster
     PointsList extractCluster(int numberCluster) const;
 
-    double getYMin();
-    
-    double getXMin();
-
-    double getYMax();
-
-    double getXMax();
+    double getYMin() const;
+    double getXMin() const;
+    double getYMax() const;
+    double getXMax() const;
 
 };
 

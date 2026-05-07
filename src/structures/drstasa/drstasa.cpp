@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <future>
 #include <limits>
 
 DRSTASA::Config::Config(int nWaypointsVal, double zMinVal, double zMaxVal)
@@ -72,15 +71,10 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
             neighbourhood_.from(prevPop[i], pop[i]);
             std::array<PointsList, 4> candidates = neighbourhood_.generateAll();
 
-            std::array<std::future<double>, 4> futures;
-            for (int k = 0; k < 4; ++k)
-                futures[k] = std::async(std::launch::async,
-                    [&, k]() { return evalWaypoints(candidates[k], start, end); });
-
             int    bestK      = 0;
-            double bestNewFit = futures[0].get();
+            double bestNewFit = evalWaypoints(candidates[0], start, end);
             for (int k = 1; k < 4; ++k) {
-                double f = futures[k].get();
+                double f = evalWaypoints(candidates[k], start, end);
                 if (f < bestNewFit) { bestNewFit = f; bestK = k; }
             }
 

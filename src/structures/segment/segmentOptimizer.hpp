@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <memory>
+#include <omp.h>
 
 struct SegmentBounds { double xMin, xMax, yMin, yMax; };
 
@@ -83,6 +84,37 @@ SegmentSAResult<NWaypoints> runSegmentSA(
     auto saResult = ssa.run(segObjective, startPoint, saPolicy);
 
     return { saResult, segObjective(saResult) };
+}
+
+/// Multi-start SA: nRestarts restart indipendenti, restituisce il migliore.
+/// Budget equalizzato con DRSTASA: nRestarts × maxIterPerRestart = popSize × maxIter × 4.
+/// Parallelo automaticamente quando non già dentro una regione OMP (if(!omp_in_parallel())).
+template<int NWaypoints>
+SegmentSAResult<NWaypoints> runSegmentSAMultiStart(
+    const Point&           segStart,
+    const Point&           segEnd,
+    const FitnessFunction& fitness,
+    double cxMin, double cxMax,
+    double cyMin, double cyMax,
+    double zMin,  double zMax,
+    int  nRestarts         = 4,
+    long maxIterPerRestart  = 6000)
+{
+    auto globalBest = runSegmentSA<NWaypoints>(
+        segStart, segEnd, fitness,
+        cxMin, cxMax, cyMin, cyMax, zMin, zMax, maxIterPerRestart);
+
+    #pragma omp parallel for schedule(static) if(!omp_in_parallel())
+    for (int run = 1; run < nRestarts; ++run) {
+        auto res = runSegmentSA<NWaypoints>(
+            segStart, segEnd, fitness,
+            cxMin, cxMax, cyMin, cyMax, zMin, zMax, maxIterPerRestart);
+
+        #pragma omp critical
+        if (res.fitness < globalBest.fitness)
+            globalBest = res;
+    }
+    return globalBest;
 }
 
 /// Risultato dell'ottimizzazione di un segmento: percorso SA e DRSTASA (start+waypoints, senza end)

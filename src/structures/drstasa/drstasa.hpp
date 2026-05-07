@@ -35,9 +35,9 @@ public:
         double eps_scale  = 0.05;
         double eps_axis   = 0.05;
         double C0         = 2.0;
-        double xMin, xMax;
-        double yMin, yMax;
-        double zMin, zMax;
+        double xMin = 0.0, xMax = 0.0;
+        double yMin = 0.0, yMax = 0.0;
+        double zMin = 0.0, zMax = 0.0;
         int    nWaypoints = 4;
 
         Config() = default;

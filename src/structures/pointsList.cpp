@@ -43,60 +43,35 @@ PointsList PointsList::extractCluster(int numberCluster) const {
     return cluster;
 }
 
-double PointsList::getXMin() {
-    if (points.size() == 0) {
-        return 0.0; 
-    }
+double PointsList::getXMin() const {
+    if (points.empty()) return 0.0;
     double xMin = points[0].getX();
-
-    for (int i = 1; i < points.size(); ++i) {
-        if (points[i].getX() < xMin) {
-            xMin = points[i].getX();
-        }
-    }
+    for (int i = 1; i < (int)points.size(); ++i)
+        if (points[i].getX() < xMin) xMin = points[i].getX();
     return xMin;
 }
 
-double PointsList::getYMin() {
-    if (points.size() == 0) {
-        return 0.0; 
-    }
+double PointsList::getYMin() const {
+    if (points.empty()) return 0.0;
     double yMin = points[0].getY();
-
-    for (int i = 1; i < points.size(); ++i) {
-        if (points[i].getY() < yMin) {
-            yMin = points[i].getY();
-        }
-    }
+    for (int i = 1; i < (int)points.size(); ++i)
+        if (points[i].getY() < yMin) yMin = points[i].getY();
     return yMin;
 }
 
-
-double PointsList::getXMax() {
-    if (points.size() == 0) {
-        return 0.0; 
-    }
+double PointsList::getXMax() const {
+    if (points.empty()) return 0.0;
     double xMax = points[0].getX();
-
-    for (int i = 1; i < points.size(); ++i) {
-        if (points[i].getX() > xMax) {
-            xMax = points[i].getX();
-        }
-    }
+    for (int i = 1; i < (int)points.size(); ++i)
+        if (points[i].getX() > xMax) xMax = points[i].getX();
     return xMax;
 }
 
-double PointsList::getYMax() {
-    if (points.size() == 0) {
-        return 0.0; 
-    }
+double PointsList::getYMax() const {
+    if (points.empty()) return 0.0;
     double yMax = points[0].getY();
-
-    for (int i = 1; i < points.size(); ++i) {
-        if (points[i].getY() > yMax) {
-            yMax = points[i].getY();
-        }
-    }
+    for (int i = 1; i < (int)points.size(); ++i)
+        if (points[i].getY() > yMax) yMax = points[i].getY();
     return yMax;
 }
 

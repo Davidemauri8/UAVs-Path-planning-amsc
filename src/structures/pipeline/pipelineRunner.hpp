@@ -59,7 +59,7 @@ BenchmarkResult runPipelineOptimization(
 
             SegmentBounds b = computeBounds(ordered);
 
-            auto saRes = runSegmentSA<NWaypoints>(
+            auto saRes = runSegmentSAMultiStart<NWaypoints>(
                 segStart, segEnd, fitness,
                 b.xMin, b.xMax, b.yMin, b.yMax, zMin, zMax);
             totalSAFit += saRes.fitness;

@@ -6,8 +6,8 @@
 
 FitnessWeights sampleFitnessWeights(double zMin, double zMax) {
     FitnessWeights weights;
-    weights.b1   = 5.0;  // Ostacoli
-    weights.b2   = 10.0; // Lunghezza
+    weights.b1   = 5.0;  // Lunghezza
+    weights.b2   = 10.0; // Ostacoli/threat
     weights.b3   = 1.0;  // Curvatura
     weights.b4   = 5.0;  // Smoothness
     weights.a1   = 1.0;

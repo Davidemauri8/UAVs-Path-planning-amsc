@@ -5,10 +5,10 @@ SegmentBounds computeBounds(const PointsList& ordered,
                             double marginFactor, double marginMin)
 {
     SegmentBounds b;
-    b.xMin = const_cast<PointsList&>(ordered).getXMin();
-    b.xMax = const_cast<PointsList&>(ordered).getXMax();
-    b.yMin = const_cast<PointsList&>(ordered).getYMin();
-    b.yMax = const_cast<PointsList&>(ordered).getYMax();
+    b.xMin = ordered.getXMin();
+    b.xMax = ordered.getXMax();
+    b.yMin = ordered.getYMin();
+    b.yMax = ordered.getYMax();
     double mx = std::max(marginMin, (b.xMax - b.xMin) * marginFactor);
     double my = std::max(marginMin, (b.yMax - b.yMin) * marginFactor);
     b.xMin -= mx; b.xMax += mx;
