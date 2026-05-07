@@ -1,0 +1,42 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/test13.dir/link.d"
+  "CMakeFiles/test13.dir/src/exporters/pointsListExporter.cpp.o"
+  "CMakeFiles/test13.dir/src/exporters/pointsListExporter.cpp.o.d"
+  "CMakeFiles/test13.dir/src/exporters/pointsListReader.cpp.o"
+  "CMakeFiles/test13.dir/src/exporters/pointsListReader.cpp.o.d"
+  "CMakeFiles/test13.dir/src/simulatedAnnealing/controller/controller.cpp.o"
+  "CMakeFiles/test13.dir/src/simulatedAnnealing/controller/controller.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/drone.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/drone.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/drstasa/drstasa.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/drstasa/drstasa.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/drstasa/reverseLearnStrategy.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/drstasa/reverseLearnStrategy.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/drstasa/stasaNeighbourhood.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/drstasa/stasaNeighbourhood.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/fitness/fitnessFunction.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/fitness/fitnessFunction.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/functions/fitnessUtilities.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/functions/fitnessUtilities.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/geo/geoUtils.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/geo/geoUtils.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/lhs/lhs.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/lhs/lhs.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/obstacles/cylinderObstacle.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/obstacles/cylinderObstacle.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/point.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/point.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/pointsList.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/pointsList.cpp.o.d"
+  "CMakeFiles/test13.dir/src/structures/segment/segmentOptimizer.cpp.o"
+  "CMakeFiles/test13.dir/src/structures/segment/segmentOptimizer.cpp.o.d"
+  "CMakeFiles/test13.dir/src/test13.cpp.o"
+  "CMakeFiles/test13.dir/src/test13.cpp.o.d"
+  "test13"
+  "test13.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/test13.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

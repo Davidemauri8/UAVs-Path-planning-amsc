@@ -10,7 +10,7 @@ include_directories(src)
 include_directories(src/simulatedAnnealing)
 
 
-# Eseguibile test11: versione refactorizzata pre-parallelizzazione
+# Previous version, befor parallelization
 set(SOURCES_TEST11
     src/test11.cpp
     src/structures/point.cpp
@@ -31,7 +31,7 @@ set(SOURCES_TEST11
 )
 add_executable(test11 ${SOURCES_TEST11})
 
-# Eseguibile test12: versione parallelizzata con OpenMP
+# OpenMP version 
 find_package(OpenMP REQUIRED)
 set(SOURCES_TEST12
     src/test12.cpp
@@ -53,7 +53,7 @@ set(SOURCES_TEST12
 )
 add_executable(test12 ${SOURCES_TEST12})
 
-# Eseguibile test13: benchmark serial vs parallel su K variabile
+# benchmark serial vs parallel on K variabale
 set(SOURCES_TEST13
     src/test13.cpp
     src/structures/point.cpp

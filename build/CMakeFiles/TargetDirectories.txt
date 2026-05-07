@@ -1,0 +1,5 @@
+/mnt/c/Users/david/UAV-amsc/build/CMakeFiles/test11.dir
+/mnt/c/Users/david/UAV-amsc/build/CMakeFiles/test12.dir
+/mnt/c/Users/david/UAV-amsc/build/CMakeFiles/test13.dir
+/mnt/c/Users/david/UAV-amsc/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/david/UAV-amsc/build/CMakeFiles/rebuild_cache.dir
