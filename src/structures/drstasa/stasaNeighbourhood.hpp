@@ -30,10 +30,10 @@ public:
     PointsList clampToBounds(const PointsList& path) const;
 
 private:
-    PointsList applyRotation();    // eq. (10): hypersphere exploration around current point
-    PointsList applyTranslation(); // eq. (11): local search along the previous step direction
-    PointsList applyScaling();     // eq. (12): global multiplicative Gaussian perturbation
-    PointsList applyAxisTransf();  // eq. (13): single-coordinate Gaussian perturbation
+    PointsList applyRotation();    // hypersphere exploration around current point
+    PointsList applyTranslation(); // local search along the previous step direction
+    PointsList applyScaling();     // global multiplicative Gaussian perturbation
+    PointsList applyAxisTransf();  // single-coordinate Gaussian perturbation
 
     // Helpers: flatten PointsList to a flat double vector and back.
     std::vector<double> flatten  (const PointsList& path) const;

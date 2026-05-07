@@ -6,7 +6,7 @@
 #include <random>
 #include <vector>
 
-// Reverse Learning Strategy applied to the entire population (eq. 19-21, Liu et al. 2025).
+// Reverse Learning Strategy applied to the entire population.
 // For each individual, a dynamic reverse point is computed from the current population
 // bounds and blended with the original solution; the reverse is accepted only if it
 // improves fitness, providing a population-level escape from local optima.

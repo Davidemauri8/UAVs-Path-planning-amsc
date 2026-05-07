@@ -11,11 +11,10 @@
 // Returns a FitnessWeights struct with default tuning values for the given altitude band.
 FitnessWeights sampleFitnessWeights(double zMin, double zMax);
 
-// Returns a FitnessFunction with two sample cylinder obstacles and default weights.
-// Useful for quick testing and benchmarking.
+// Returns a FitnessFunction with obstacles and default weights.
 FitnessFunction sampleFitnessFunction(double zMin, double zMax);
 
-// Returns a FitnessFunction with two default cylinder obstacles for the main pipeline.
+// Returns a FitnessFunction with obstacles for the main pipeline.
 FitnessFunction makeDefaultFitness(double zMin, double zMax);
 
 // Builds a DRSTASA::Config tuned for the given number of intermediate waypoints.

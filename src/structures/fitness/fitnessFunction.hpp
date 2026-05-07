@@ -8,15 +8,16 @@
 #include <limits>
 
 // Weights and altitude bounds used to combine the four fitness sub-functions.
+// All values are intentionally left at 0 — configure them in fitnessUtilities.cpp.
 struct FitnessWeights {
-    double b1;    // weight for path length (F1)
-    double b2;    // weight for obstacle/threat cost (F2)
-    double b3;    // weight for altitude deviation (F3)
-    double b4;    // weight for path smoothness (F4)
-    double a1;    // weight for horizontal turning angle inside F4
-    double a2;    // weight for vertical climb-angle variation inside F4
-    double hMin;  // minimum allowed flight altitude
-    double hMax;  // maximum allowed flight altitude
+    double b1   = 0.0; // weight for path length (F1)
+    double b2   = 0.0; // weight for obstacle/threat cost (F2)
+    double b3   = 0.0; // weight for altitude deviation (F3)
+    double b4   = 0.0; // weight for path smoothness (F4)
+    double a1   = 0.0; // weight for horizontal turning angle inside F4
+    double a2   = 0.0; // weight for vertical climb-angle variation inside F4
+    double hMin = 0.0; // minimum allowed flight altitude
+    double hMax = 0.0; // maximum allowed flight altitude
 };
 
 // Multi-objective fitness function for UAV path evaluation.

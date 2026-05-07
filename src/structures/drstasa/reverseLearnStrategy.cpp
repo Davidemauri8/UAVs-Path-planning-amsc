@@ -8,7 +8,7 @@ ReverseLearnStrategy::ReverseLearnStrategy(
     : xMin_(xMin), xMax_(xMax), yMin_(yMin), yMax_(yMax), zMin_(zMin), zMax_(zMax),
       rng_(seed) {}
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// Helpers
 
 std::vector<double> ReverseLearnStrategy::flatten(const PointsList& path) const {
     int N = path.size();
@@ -41,7 +41,7 @@ PointsList ReverseLearnStrategy::clampToBounds(const PointsList& path) const {
     return result;
 }
 
-// ─── Reverse learning update ──────────────────────────────────────────────────
+// Reverse learning update
 
 void ReverseLearnStrategy::apply(std::vector<PointsList>& pop,
                                   std::vector<double>&    fitVals,
@@ -50,7 +50,7 @@ void ReverseLearnStrategy::apply(std::vector<PointsList>& pop,
     int N = static_cast<int>(pop.size());
     int D = nWaypoints * 3;
 
-    // Compute per-dimension min and max across the population (eq. 20: a_i(t), b_i(t)).
+    // Compute per-dimension min and max across the population.
     std::vector<double> dimMin(D,  1e18);
     std::vector<double> dimMax(D, -1e18);
     for (int i = 0; i < N; ++i) {
@@ -67,12 +67,12 @@ void ReverseLearnStrategy::apply(std::vector<PointsList>& pop,
         double r5 = uni(rng_);
         double r6 = uni(rng_);
 
-        // Dynamic reverse point (eq. 20).
+        // Dynamic reverse point.
         std::vector<double> xBar(D);
         for (int d = 0; d < D; ++d)
             xBar[d] = r5 * (dimMin[d] + dimMax[d] - x[d]);
 
-        // Blend reverse point with the original solution (eq. 21).
+        // Blend reverse point with the original solution.
         std::vector<double> xNew(D);
         for (int d = 0; d < D; ++d)
             xNew[d] = (1.0 - r6) * x[d] + r6 * xBar[d];

@@ -3,19 +3,22 @@
 #include <cmath>
 #include <memory>
 
+// Builds a FitnessWeights with all operative values. Weight fields (b1..a2) are
+// defined here and left at zero in the struct; only altitude bounds come from outside.
 FitnessWeights sampleFitnessWeights(double zMin, double zMax) {
     FitnessWeights weights;
-    weights.b1   = 5.0;  // path length
-    weights.b2   = 10.0; // obstacle/threat cost
-    weights.b3   = 1.0;  // altitude deviation
-    weights.b4   = 5.0;  // smoothness
-    weights.a1   = 1.0;  // horizontal turning angle coefficient
-    weights.a2   = 1.0;  // vertical climb-angle coefficient
+    weights.b1   = 5.0;
+    weights.b2   = 10.0;
+    weights.b3   = 1.0;
+    weights.b4   = 5.0;
+    weights.a1   = 1.0;
+    weights.a2   = 1.0;
     weights.hMin = zMin;
     weights.hMax = zMax;
     return weights;
 }
 
+// Sample scenario: cylindrical obstacles close together to test collision avoidance.
 FitnessFunction sampleFitnessFunction(double zMin, double zMax) {
     std::vector<std::shared_ptr<Obstacle>> obstacles;
     obstacles.push_back(std::make_shared<CylinderObstacle>(
@@ -27,6 +30,7 @@ FitnessFunction sampleFitnessFunction(double zMin, double zMax) {
     return FitnessFunction(obstacles, weights);
 }
 
+// All DRSTASA operative parameters are defined here; the Config struct fields are zero by default.
 DRSTASA::Config GetConfigurationDRST(int NWaypoints) {
     DRSTASA::Config drsCfg;
 
@@ -46,6 +50,7 @@ DRSTASA::Config GetConfigurationDRST(int NWaypoints) {
     return drsCfg;
 }
 
+// Setting obstacles parameters.
 FitnessFunction makeDefaultFitness(double zMin, double zMax) {
     std::vector<std::shared_ptr<Obstacle>> obstacles;
     obstacles.push_back(std::make_shared<CylinderObstacle>(
@@ -55,6 +60,7 @@ FitnessFunction makeDefaultFitness(double zMin, double zMax) {
     return FitnessFunction(obstacles, sampleFitnessWeights(zMin, zMax));
 }
 
+// Converts all waypoints in path from local metric coordinates to GPS.
 void convertToGPS(PointsList& path, double lon0, double lat0, double metersPerDegLon, double metersPerDegLat) {
     for (int i = 0; i < path.size(); ++i) {
         Point& p = path.extractPoint(i);

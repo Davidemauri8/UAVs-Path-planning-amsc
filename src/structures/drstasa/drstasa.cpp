@@ -31,11 +31,11 @@ double DRSTASA::evalWaypoints(const PointsList& waypoints,
     return f;
 }
 
-// Main optimisation loop (Algorithm 1, Liu et al. 2025).
+// Main optimisation loop.
 PointsList DRSTASA::run(const Point& start, const Point& end) {
     int popSize = cfg_.popSize;
 
-    // Initialise the population with Latin Hypercube Sampling (Section 4.1).
+    // Initialise the population with Latin Hypercube Sampling.
     std::vector<PointsList> pop;
     pop.reserve(popSize);
     for (int i = 0; i < popSize; ++i) {
@@ -65,7 +65,7 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
 
     for (int iter = 0; iter < cfg_.maxIter; ++iter) {
 
-        // Step 4 (Algorithm 1): apply all four STASA operators to each individual,
+        // Apply all four STASA operators to each individual,
         // keep the best candidate, and accept via Metropolis criterion.
         for (int i = 0; i < popSize; ++i) {
             neighbourhood_.from(prevPop[i], pop[i]);
@@ -90,7 +90,7 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
             }
         }
 
-        // Steps 7-8 (Algorithm 1): disruption operator perturbs each individual
+        // Disruption operator perturbs each individual
         // using the global best and a random neighbour to maintain diversity.
         for (int i = 0; i < popSize; ++i) {
             int j = neighborDist(rng_);
@@ -103,7 +103,7 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
             }
         }
 
-        // Step 9 (Algorithm 1): reverse learning applied with probability (1 - p).
+        // Reverse learning is applied with probability (1 - p).
         if (uni(rng_) > cfg_.p)
             reverseLearn_.apply(pop, fitVals,
                 [&](const PointsList& wp) { return evalWaypoints(wp, start, end); },
