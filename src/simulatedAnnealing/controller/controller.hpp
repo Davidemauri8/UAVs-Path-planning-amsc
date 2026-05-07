@@ -7,25 +7,23 @@
 
 class Controller {
 private:
-    double C0;          // Soglia iniziale (tipicamente tra 1 e 3)
-    int total_iters;    // T (Iterazioni totali)
+    double C0;          // initial threshold
+    int total_iters;    // Total iteration
     
-    // Generatore di numeri casuali
     std::mt19937 gen;
 
-    // Funzione di supporto per la distanza Euclidea tra due traiettorie (PointsList)
-    // In questo contesto, calcoliamo la distanza media tra i punti corrispondenti
+    // calculate Euclidean distance 
     double calculateDistance(const PointsList& a, const PointsList& b);
 
 public:
     Controller(double initial_C, int iterations);
 
     /**
-     * Applica il Disruption Operator alla soluzione corrente.
-     * @param current Soluzione attuale (Xi)
-     * @param best Migliore soluzione globale (Xbest)
-     * @param neighbor Una soluzione vicina (Xj) per calcolare la perturbazione Ri,j
-     * @param current_iter Iterazione attuale (iter)
+     * aplly Disruption Operator
+     * @param current actual solution (Xi)
+     * @param best best solution (Xbest)
+     * @param neighbor close solution to (Xj)
+     * @param current_iter 
      */
     void applyDisruption(PointsList& current, const PointsList& best, const PointsList& neighbor, int current_iter);
 };
