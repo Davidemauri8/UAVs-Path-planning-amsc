@@ -3,7 +3,7 @@
 
 PointsList::PointsList() {}
 
-//Creo e inizializzo in unica operazine con :
+// Member initializer list initializes the internal vector in a single operation.
 PointsList::PointsList(std::vector<Point> points)
     : points(points) {}
 
@@ -74,4 +74,3 @@ double PointsList::getYMax() const {
         if (points[i].getY() > yMax) yMax = points[i].getY();
     return yMax;
 }
-

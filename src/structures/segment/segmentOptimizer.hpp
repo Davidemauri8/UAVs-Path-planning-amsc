@@ -20,22 +20,26 @@
 #include <memory>
 #include <omp.h>
 
+// Axis-aligned bounding box for a cluster, with an optional safety margin.
 struct SegmentBounds { double xMin, xMax, yMin, yMax; };
 
-/// Calcola i bounds del cluster ordinato con margine (default 20%, minimo 50m).
-/// Implementazione in segmentOptimizer.cpp.
+// Computes the XY bounding box of ordered waypoints and expands it by a margin.
+// marginFactor: fractional expansion (e.g. 0.2 = 20%); marginMin: absolute minimum margin.
+// Declared here, implemented in segmentOptimizer.cpp.
 SegmentBounds computeBounds(const PointsList& ordered,
                             double marginFactor = 0.2,
                             double marginMin    = 50.0);
 
-/// Risultato della sola ottimizzazione SA di un segmento
+// Result of a single classic SA run on one path segment.
 template<int NWaypoints>
 struct SegmentSAResult {
     point_nd<NWaypoints * 3> bestPoint;
     double                   fitness;
 };
 
-/// SA classico su un singolo segmento start→end. Nessun side effect su stato esterno.
+// Runs a single classic SA optimisation on the segment start→end.
+// The search domain is a sphere centred on the cluster's bounding box midpoint.
+// No side effects on any external state.
 template<int NWaypoints>
 SegmentSAResult<NWaypoints> runSegmentSA(
     const Point&           segStart,
@@ -86,9 +90,9 @@ SegmentSAResult<NWaypoints> runSegmentSA(
     return { saResult, segObjective(saResult) };
 }
 
-/// Multi-start SA: nRestarts restart indipendenti, restituisce il migliore.
-/// Budget equalizzato con DRSTASA: nRestarts × maxIterPerRestart = popSize × maxIter × 4.
-/// Parallelo automaticamente quando non già dentro una regione OMP (if(!omp_in_parallel())).
+// Multi-start SA: runs nRestarts independent SA restarts and returns the best result.
+// Total iteration budget is equalised with DRSTASA: nRestarts × maxIterPerRestart = popSize × maxIter × 4.
+// Parallelised with OpenMP when not already inside a parallel region.
 template<int NWaypoints>
 SegmentSAResult<NWaypoints> runSegmentSAMultiStart(
     const Point&           segStart,
@@ -117,7 +121,9 @@ SegmentSAResult<NWaypoints> runSegmentSAMultiStart(
     return globalBest;
 }
 
-/// Risultato dell'ottimizzazione di un segmento: percorso SA e DRSTASA (start+waypoints, senza end)
+// Holds the results of both optimisers for a single segment.
+// Both paths contain start + waypoints but NOT the segment end-point,
+// which the caller appends when assembling the full route.
 struct SegmentResult {
     PointsList saPath;
     PointsList drstasaPath;
@@ -125,14 +131,14 @@ struct SegmentResult {
     double     drstasaFit;
 };
 
-/// Appende tutti i punti di src in dest
+// Appends all points of src to dest.
 inline void appendPath(PointsList& dest, const PointsList& src) {
     for (int w = 0; w < src.size(); ++w)
         dest.addPoint(Point(src.getX(w), src.getY(w), src.getZ(w), -1));
 }
 
-/// Esegue SA classico e DRSTASA su un segmento start→end, restituisce entrambi i percorsi
-/// I percorsi nel risultato contengono start+waypoints ma NON l'end (aggiunto dal chiamante)
+// Runs both classic SA and DRSTASA on the segment start→end and returns both paths.
+// The returned paths contain start + waypoints but NOT the end-point.
 template <int NWaypoints>
 SegmentResult optimizeSegment(
     const Point&          segStart,
@@ -155,7 +161,7 @@ SegmentResult optimizeSegment(
         return (std::isinf(cost) || std::isnan(cost)) ? 1e12 : cost;
     };
 
-    // ── SA classico ──────────────────────────────────────────────────────────
+    // ── Classic SA ───────────────────────────────────────────────────────────
     Lhs lhs(bounds.xMin, bounds.xMax, bounds.yMin, bounds.yMax, zMin, zMax, NWaypoints, -1);
     point_nd<Dim> startPoint = lhs.toPointNd<NWaypoints>();
 
@@ -192,7 +198,7 @@ SegmentResult optimizeSegment(
     PointsList drstasaSeg = drstasa.run(segStart, segEnd);
     res.drstasaFit = drstasa.lastBestFit();
 
-    // drstasaSeg contiene start+waypoints+end: escludiamo l'end
+    // drstasaSeg contains start+waypoints+end; exclude the end-point.
     for (int w = 0; w < drstasaSeg.size() - 1; ++w)
         res.drstasaPath.addPoint(Point(drstasaSeg.getX(w), drstasaSeg.getY(w),
                                       drstasaSeg.getZ(w), -1));

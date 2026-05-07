@@ -15,6 +15,8 @@ double CylinderObstacle::distance(Drone* drone) const {
 }
 
 double CylinderObstacle::segmentCost(const Point& A, const Point& B) const {
+    // Find the closest point on segment A→B to the cylinder center using
+    // a clamped projection parameter t in [0,1].
     Point v = B.diff(A);
     Point w = center.diff(A);
 
@@ -29,7 +31,7 @@ double CylinderObstacle::segmentCost(const Point& A, const Point& B) const {
     if (d_k > buffer + radius)
         return 0.0;
     else if (d_k <= radius)
-        return std::numeric_limits<double>::infinity();
+        return std::numeric_limits<double>::infinity(); // collision: path is illegal
     else
-        return (buffer + radius) - d_k;
+        return (buffer + radius) - d_k; // linear penalty inside the buffer zone
 }

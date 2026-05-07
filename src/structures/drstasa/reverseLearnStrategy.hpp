@@ -6,9 +6,10 @@
 #include <random>
 #include <vector>
 
-// Reverse Learning Strategy (eq. 19-21, Liu et al. 2025).
-// Applicata all'intera popolazione per sfuggire a ottimi locali.
-// evalFn: lambda che calcola la fitness di un percorso di soli waypoint intermedi.
+// Reverse Learning Strategy applied to the entire population (eq. 19-21, Liu et al. 2025).
+// For each individual, a dynamic reverse point is computed from the current population
+// bounds and blended with the original solution; the reverse is accepted only if it
+// improves fitness, providing a population-level escape from local optima.
 class ReverseLearnStrategy {
 public:
     ReverseLearnStrategy(
@@ -18,6 +19,9 @@ public:
         unsigned seed = 42
     );
 
+    // Applies the reverse learning update to every individual in pop.
+    // evalFn: fitness function for a waypoint-only PointsList (no start/end).
+    // nWaypoints: number of intermediate waypoints per individual.
     void apply(std::vector<PointsList>& pop,
                std::vector<double>&    fitVals,
                std::function<double(const PointsList&)> evalFn,

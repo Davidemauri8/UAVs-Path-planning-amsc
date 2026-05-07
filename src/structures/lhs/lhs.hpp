@@ -7,9 +7,12 @@
 #include "../pointsList.hpp"
 #include "geometry/point.hpp"
 
+// Latin Hypercube Sampling (LHS) for generating an initial population of waypoints.
+// The 3D search space [xMin,xMax] x [yMin,yMax] x [zMin,zMax] is divided into n equal
+// intervals per axis; one sample is drawn from each interval and the three axes are
+// independently shuffled to ensure uniform coverage.
 class Lhs {
 private:
-    // Dati membri (ora chiaramente privati)
     double xMin, xMax, yMin, yMax, zMin, zMax;
     int n;
     int idCluster;
@@ -18,20 +21,25 @@ private:
     std::vector<double> zSamples;
     std::mt19937 gen;
 
-    //genera partizione per x y e z
+    // Divides each axis into n equal intervals and draws one uniform random
+    // sample per interval, storing results in xSamples/ySamples/zSamples.
     void generatePartitions();
-    //faccio shuffle
+
+    // Independently shuffles the three sample vectors to pair axes randomly,
+    // satisfying the Latin Hypercube property.
     void shuffleSamples();
-    //genero popolazione iniziale
+
+    // Combines the three sample vectors into a PointsList.
     PointsList getSample();
 
 public:
-    // Costruttore
     Lhs(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, int n, int idCluster);
 
+    // Clears internal buffers, generates partitions, shuffles, and returns a fresh population.
     PointsList generatePopulation();
 
-    // converte il primo punto della popolazione in point_nd<NW*3>
+    // Generates one population and packs the first NWaypoints points into a
+    // flat point_nd<NWaypoints*3> vector for use with the SA library.
     template <int NWaypoints>
     point_nd<NWaypoints * 3> toPointNd() {
         PointsList pop = generatePopulation();

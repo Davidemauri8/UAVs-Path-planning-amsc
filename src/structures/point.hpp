@@ -1,6 +1,8 @@
 #ifndef POINT_HPP
 #define POINT_HPP
 
+// 3D point with an optional cluster label, used as the basic spatial unit
+// throughout the path-planning pipeline.
 class Point {
     double x;
     double y;
@@ -11,34 +13,32 @@ public:
     Point();
     Point(double x, double y, double z, int idCluster);
 
-    //Per selezionare le singole cordinate o il cluster di un punto
-    //utilizziamo const per rendere queste variabili non modificabili
+    // Read-only accessors; declared const to allow use on const Point references.
     double getX() const;
     double getY() const;
     double getZ() const;
     int    getCluster() const;
 
-    //Distanza tra due punti
+    // Euclidean distance to another point.
     double distance(const Point& other) const;
 
-    //Differenza tra due punti
+    // Returns the vector from other to this (component-wise subtraction).
     Point  diff(const Point& other) const;
 
-    //Norma
+    // Euclidean norm of the point interpreted as a vector from the origin.
     double norm() const;
 
-    //Moltiplicazione solo tra cordinate x e y di due punti(utile per F4)
+    // 2D cross product (x*other.y - y*other.x), used in the F4 smoothness cost
+    // to measure the horizontal turning angle between two path segments.
     double cross2D(const Point& other) const;
 
-    //Inserire nuove cordinate e cluster
     void setX(double xNew);
     void setY(double yNew);
     void setZ(double zNew);
     void setCluster(int id);
 
-    //Operatori utili
-    double operator*(const Point& other) const;
-    Point  operator*(double scalar) const;
+    double operator*(const Point& other) const; // 3D dot product
+    Point  operator*(double scalar) const;       // scalar multiplication
     Point  operator+(const Point& other) const;
     Point  operator-(const Point& other) const;
 };

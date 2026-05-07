@@ -4,6 +4,7 @@
 #include <vector>
 #include "point.hpp"
 
+// Ordered sequence of 3D points representing a UAV path or a cluster of waypoints.
 class PointsList {
     std::vector<Point> points;
 
@@ -16,19 +17,17 @@ public:
     double getY(int i)     const;
     double getZ(int i)     const;
 
-    //Calcola la distanza totale tra tutti i punti della lista
+    // Sum of Euclidean distances between consecutive points (path length).
     double totalDistance() const;
 
-    //Aggiunge un punto alla lista
     void   addPoint(Point p);
 
-    //Estrae un punto dalla lista
+    // Returns a mutable reference so callers can update the point in-place.
     Point& extractPoint(int i);
 
-    //Sostituisce l'i-esimo punto nella lista
     void   replacePoint(int i, Point p);
 
-    //Estrarre tutti i punti appartenenti ad un cluster
+    // Returns a new PointsList containing only points assigned to the given cluster id.
     PointsList extractCluster(int numberCluster) const;
 
     double getYMin() const;

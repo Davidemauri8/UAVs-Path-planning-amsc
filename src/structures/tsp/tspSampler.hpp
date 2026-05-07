@@ -3,18 +3,18 @@
 
 #include "tspNeighbourhood.hpp"
 
+// Sampler for TspNeighbourhood. Every 2-opt neighbour is a valid permutation,
+// so no rejection is needed and the sample is always accepted on the first try.
 class TspSampler {
 public:
     using Neighbourhood = TspNeighbourhood;
 
-    // max_it: numero massimo di tentativi per trovare soluzione valida
     PointsList sample(const TspNeighbourhood& n, int max_it = 1000) {
-        return n.generateNext();  // ogni permutazione è valida → sempre accettata
+        return n.generateNext();
     }
 
-    void seed(long s) {
-        // non usiamo seed esterno — il gen è dentro TspNeighbourhood
-    }
+    // Seeding is handled internally by TspNeighbourhood's own RNG.
+    void seed(long s) {}
 };
 
 #endif

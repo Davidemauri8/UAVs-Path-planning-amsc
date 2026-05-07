@@ -8,6 +8,9 @@
 #include "scheduler/scheduler.hpp"
 #include <memory>
 
+// Simulated Annealing solver for the Travelling Salesman ordering of cluster waypoints.
+// Finds a visit order that minimises the path fitness, providing a good starting
+// permutation before the per-segment SA/DRSTASA optimisation.
 class TspSA {
 public:
     TspSA(const FitnessFunction& fitness,
@@ -19,9 +22,13 @@ public:
         , scheduler_(scheduler)
         , maxIter_(maxIter) {}
 
+    // Runs the SA loop starting from initialPath.
+    // At each temperature level, stab_it() candidate permutations are evaluated
+    // and accepted/rejected via the Metropolis criterion.
+    // Returns the best permutation found across all iterations.
     PointsList run(const PointsList& initialPath) {
 
-        // guard: cluster con un solo punto
+        // A cluster with a single point has no ordering to optimise.
         if (initialPath.size() < 2) return initialPath;
 
         PointsList current  = initialPath;

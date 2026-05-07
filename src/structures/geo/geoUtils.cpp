@@ -4,12 +4,17 @@
 namespace GeoUtils {
 
 namespace {
+    // Metres per degree of latitude (constant at any latitude).
     constexpr double kMetersPerDegLat = 111320.0;
+
+    // Metres per degree of longitude varies with latitude due to Earth's curvature.
     inline double metersPerDegLon(double lat0) {
         return 111320.0 * std::cos(lat0 * M_PI / 180.0);
     }
 }
 
+// Shifts each point so that (lon0, lat0) maps to the metric origin (0, 0),
+// then scales degrees to metres using the local conversion factors.
 void toMeters(PointsList& points, double lat0, double lon0) {
     const double mpdLon = metersPerDegLon(lat0);
     for (int i = 0; i < points.size(); ++i) {
@@ -19,6 +24,7 @@ void toMeters(PointsList& points, double lat0, double lon0) {
     }
 }
 
+// Inverse of toMeters: converts local metric offsets back to absolute GPS coordinates.
 void toGPS(PointsList& points, double lat0, double lon0) {
     const double mpdLon = metersPerDegLon(lat0);
     for (int i = 0; i < points.size(); ++i) {

@@ -4,8 +4,9 @@
 #include "../pointsList.hpp"
 #include <random>
 
-// PointsList non è un point_nd — definiamo il nostro NeighbourhoodExtractor
-// senza ereditare da quello del repo AMSC che è templatizzato su point_nd
+// Neighbourhood operator for TSP-style ordering of waypoints.
+// PointsList is not a point_nd, so this class does not inherit from the AMSC
+// library's templatised NeighbourhoodExtractor; it mirrors the same interface instead.
 class TspNeighbourhood {
 public:
     using PointType = PointsList;
@@ -18,13 +19,14 @@ public:
     TspNeighbourhood(const PointsList& path)
         : current(path), prev(path) {}
 
-    // aggiorna il centro del neighbourhood
+    // Updates the neighbourhood centre to a new current solution.
     void from(const PointsList& p, const PointsList& c) {
         prev    = p;
         current = c;
     }
 
-    // genera una nuova soluzione con 2-opt swap
+    // Generates a neighbour by applying a random 2-opt swap:
+    // two indices i < j are chosen and the sub-sequence between them is reversed.
     PointsList generateNext() const {
         PointsList next = current;
         int size = next.size();
@@ -36,7 +38,6 @@ public:
         while (j == i) j = dist(gen);
         if (i > j) std::swap(i, j);
 
-        // inverti il segmento tra i e j
         int lo = i, hi = j;
         while (lo < hi) {
             Point tmp = next.extractPoint(lo);
@@ -47,8 +48,9 @@ public:
         return next;
     }
 
+    // Every permutation of waypoints is a valid TSP solution.
     bool contains(const PointsList&) const {
-        return true; // ogni permutazione è valida
+        return true;
     }
 };
 

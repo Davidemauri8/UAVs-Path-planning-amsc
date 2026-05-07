@@ -1,7 +1,7 @@
 #include "point.hpp"
 #include <cmath>
 
-//Creo e inizializzo direttamete risparmiando un'operazione
+// Member initializer list avoids a default construction followed by assignment.
 Point::Point() : x(0), y(0), z(0), idCluster(-1) {}
 
 Point::Point(double x, double y, double z, int idCluster)
@@ -36,6 +36,7 @@ void Point::setY(double yNew)    { y = yNew; }
 void Point::setZ(double zNew)    { z = zNew; }
 void Point::setCluster(int id)   { idCluster = id; }
 
+// 3D dot product
 double Point::operator*(const Point& other) const {
     return x*other.x + y*other.y + z*other.z;
 }

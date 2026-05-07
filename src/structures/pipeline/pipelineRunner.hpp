@@ -11,14 +11,21 @@
 #include "scheduler/scheduler.hpp"
 #include <omp.h>
 
+// Aggregated benchmark output: cumulative fitness for SA and DRSTASA paths,
+// and total wall-clock time for the full optimisation run.
 struct BenchmarkResult {
     double saFit;
     double drstasaFit;
     double wallTime;
 };
 
-/// Esegue il loop di ottimizzazione su allPoints già clusterizzato.
-/// numThreads=1 → seriale, numThreads>1 → parallelo OMP.
+// Runs the full path-planning pipeline on a pre-clustered point set:
+//   1. For each cluster, order waypoints with TSP-SA.
+//   2. For each consecutive pair of ordered waypoints, optimise the connecting
+//      segment with both multi-start SA and DRSTASA.
+//   3. Accumulate both optimised paths and their fitness scores.
+//
+// numThreads=1 runs serially; numThreads>1 distributes clusters across OMP threads.
 template<int NWaypoints>
 BenchmarkResult runPipelineOptimization(
     const PointsList&      allPoints,
@@ -48,6 +55,7 @@ BenchmarkResult runPipelineOptimization(
             continue;
         }
 
+        // Order waypoints in the cluster using TSP-SA.
         PointsList ordered = TspSA(fitness, std::make_shared<MetropolisCriterion>(),
             std::make_shared<ExponentialScheduler>(100.0, 0.01, 200, 0.95), 500).run(cluster);
 
@@ -59,12 +67,14 @@ BenchmarkResult runPipelineOptimization(
 
             SegmentBounds b = computeBounds(ordered);
 
+            // Classic multi-start SA for this segment.
             auto saRes = runSegmentSAMultiStart<NWaypoints>(
                 segStart, segEnd, fitness,
                 b.xMin, b.xMax, b.yMin, b.yMax, zMin, zMax);
             totalSAFit += saRes.fitness;
             appendSASegment<NWaypoints>(localSA, saRes, segStart);
 
+            // DRSTASA for the same segment with locally-adjusted bounds.
             DRSTASA::Config localCfg = drsCfg;
             localCfg.xMin = b.xMin; localCfg.xMax = b.xMax;
             localCfg.yMin = b.yMin; localCfg.yMax = b.yMax;
@@ -74,6 +84,7 @@ BenchmarkResult runPipelineOptimization(
             appendDRSTASASegment(localDRS, drstasaSeg);
         }
 
+        // Append the final waypoint (the segment end-point of the last segment).
         Point lastPt(ordered.getX(ordered.size()-1),
                      ordered.getY(ordered.size()-1),
                      ordered.getZ(ordered.size()-1), -1);

@@ -12,8 +12,10 @@
 #include <ctime>
 
 #include "pointsList.hpp"
-//#include "../structures/point.hpp"
 
+// K-Means clustering for 3D points.
+// Groups waypoints into K spatial clusters so that each cluster can be
+// optimised independently by a separate TSP+SA segment-optimiser.
 class KMeans {
 private:
     int K;
@@ -21,11 +23,11 @@ private:
     unsigned int seed_;
     PointsList centroids;
 
+    // Selects K random points from the dataset as initial centroids.
     void initializeCentroids(PointsList& points) {
         std::mt19937 gen(seed_);
         std::uniform_int_distribution<> dis(0, points.size() - 1);
 
-        // Scegliamo K punti casuali dal dataset come centroidi iniziali
         for (int i = 0; i < K; ++i) {
             int randomIndex = dis(gen);
 			Point randomP = points.extractPoint(randomIndex);
@@ -37,16 +39,17 @@ private:
 public:
     KMeans(int k, int iter, unsigned int seed = 42) : K(k), max_iterations(iter), seed_(seed) {}
 
+    // Runs the K-Means algorithm: assigns each point to the nearest centroid,
+    // recomputes centroids as cluster means, and repeats until convergence or max_iterations.
     void run(PointsList& points) {
         if (points.size() < K) return;
 
-        // Chiamata alla funzione di inizializzazione
         initializeCentroids(points);
 
         for (int iter = 0; iter < max_iterations; ++iter) {
             bool changed = false;
 
-            //Trova il centroide più vicino per ogni punto
+            // Assign each point to the nearest centroid.
             for (int i = 0; i < points.size(); ++i) {
 				Point& p = points.extractPoint(i);
 
@@ -67,7 +70,7 @@ public:
                 }
             }
 
-            // Ricalcola la posizione dei centroidi (media)
+            // Recompute each centroid as the mean of its assigned points.
             std::vector<double> sumX(K, 0.0), sumY(K, 0.0), sumZ(K, 0.0);
             std::vector<int> counts(K, 0);
 
@@ -85,25 +88,25 @@ public:
 
             for (int i = 0; i < K; ++i) {
                 if (counts[i] > 0) {
-
 					Point newCentroid(sumX[i] / counts[i], sumY[i] / counts[i], sumZ[i] / counts[i], i);
 					centroids.replacePoint(i, newCentroid);
 				}
             }
 
             if (!changed) {
-                std::cout << "Convergenza raggiunta all'iterazione: " << iter << std::endl;
+                std::cout << "Convergence reached at iteration: " << iter << std::endl;
                 break;
             }
         }
     }
 
+    // Prints the final centroid coordinates for each cluster.
     void printResults() {
-        std::cout << "\n Centroidi Finali " << std::endl;
+        std::cout << "\n Final Centroids " << std::endl;
         for (int i = 0; i < K; ++i) {
-            std::cout << "Cluster " << i << ": (" 
-            << centroids.extractPoint(i).getX() << ", " 
-            << centroids.extractPoint(i).getY() << " , " 
+            std::cout << "Cluster " << i << ": ("
+            << centroids.extractPoint(i).getX() << ", "
+            << centroids.extractPoint(i).getY() << " , "
             << centroids.extractPoint(i).getZ() << ")" << std::endl;
         }
     }
@@ -111,4 +114,3 @@ public:
 
 
 #endif
-

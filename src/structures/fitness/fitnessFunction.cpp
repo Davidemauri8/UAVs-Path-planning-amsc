@@ -7,12 +7,13 @@ FitnessFunction::FitnessFunction(const std::vector<std::shared_ptr<Obstacle>>& o
                                  const FitnessWeights& weights)
     : obstacles_(obstacles), w_(weights) {}
 
-// F1: lunghezza totale del percorso
+// F1: total Euclidean length of the path.
 double FitnessFunction::f1_pathLength(const PointsList& path) const {
     return path.totalDistance();
 }
 
-//F2: costo ostacoli 
+// F2: cumulative obstacle penalty across all segments and all obstacles.
+// Returns infinity immediately if any segment causes a hard collision.
 double FitnessFunction::f2_threatCost(const PointsList& path) const {
     double total = 0.0;
 
@@ -29,7 +30,8 @@ double FitnessFunction::f2_threatCost(const PointsList& path) const {
     return total;
 }
 
-//F3: costo altitudine 
+// F3: penalises altitude deviation from the midpoint of [hMin, hMax].
+// Returns infinity if any waypoint falls outside the allowed altitude band.
 double FitnessFunction::f3_altitudeCost(const PointsList& path) const {
     double total = 0.0;
     double hMid  = (w_.hMin + w_.hMax) / 2.0;
@@ -38,14 +40,15 @@ double FitnessFunction::f3_altitudeCost(const PointsList& path) const {
         double h = path.getZ(i);
 
         if (h < w_.hMin || h > w_.hMax)
-            return INF; // fuori range → percorso illegale
+            return INF; // out of range: path is illegal
 
         total += std::abs(h - hMid);
     }
     return total;
 }
 
-// ─── F4: smoothness (angoli di virata e salita) ───────────────────────────────
+// F4: path smoothness measured as weighted sum of horizontal turning angles (phi)
+// and changes in vertical climb angle (psi) across consecutive segment triplets.
 double FitnessFunction::f4_smoothness(const PointsList& path) const {
     if (path.size() < 3) return 0.0;
 
@@ -58,25 +61,25 @@ double FitnessFunction::f4_smoothness(const PointsList& path) const {
         Point p1(path.getX(i+1), path.getY(i+1), path.getZ(i+1), -1);
         Point p2(path.getX(i+2), path.getY(i+2), path.getZ(i+2), -1);
 
-        Point v1 = p1 - p0;  // vettore primo segmento
-        Point v2 = p2 - p1;  // vettore secondo segmento
+        Point v1 = p1 - p0; // direction vector of the first segment
+        Point v2 = p2 - p1; // direction vector of the second segment
 
         double n1 = v1.norm();
         double n2 = v2.norm();
-        if (n1 < 1e-9 || n2 < 1e-9) continue; // punti sovrapposti, salta
+        if (n1 < 1e-9 || n2 < 1e-9) continue; // skip overlapping waypoints
 
-        // φ: angolo di virata orizzontale tra v1 e v2
-        double dot   = v1 * v2;                  // operator* = dot product
+        // phi: horizontal turning angle between v1 and v2.
+        double dot   = v1 * v2;
         double cross = v1.cross2D(v2);
         double phi   = std::atan2(std::abs(cross), dot);
         sumPhi += phi;
 
-        // ψ: angolo di salita del secondo segmento
+        // psi: climb angle of the second segment.
         double dz  = p2.getZ() - p1.getZ();
         double dxy = std::sqrt(v2.getX() * v2.getX() + v2.getY() * v2.getY());
         double psi = (dxy > 1e-9) ? std::atan2(dz, dxy) : 0.0;
 
-        // sommiamo la variazione di ψ, non il valore assoluto
+        // Accumulate the change in climb angle, not the absolute angle.
         if (i > 0) sumPsi += std::abs(psi - prevPsi);
         prevPsi = psi;
     }
@@ -84,11 +87,12 @@ double FitnessFunction::f4_smoothness(const PointsList& path) const {
     return w_.a1 * sumPhi + w_.a2 * sumPsi;
 }
 
-// ─── evaluate: assembla tutto ─────────────────────────────────────────────────
+// evaluate: assembles the total fitness score.
+// F2 and F3 are evaluated first to short-circuit on illegal paths before
+// computing the more expensive F1 and F4.
 double FitnessFunction::evaluate(const PointsList& path) const {
     if (path.size() < 2) return INF;
 
-    // F2 e F3 prima: se illegale, esci subito senza calcolare il resto
     double f2 = f2_threatCost(path);
     if (f2 == INF) return INF;
 
