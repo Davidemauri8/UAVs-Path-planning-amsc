@@ -3,8 +3,7 @@
 
 #include "tspNeighbourhood.hpp"
 
-// Sampler for TspNeighbourhood. Every 2-opt neighbour is a valid permutation,
-// so no rejection is needed and the sample is always accepted on the first try.
+// Sampler for TspNeighbourhood
 class TspSampler {
 public:
     using Neighbourhood = TspNeighbourhood;
@@ -13,7 +12,7 @@ public:
         return n.generateNext();
     }
 
-    // Seeding is handled internally by TspNeighbourhood's own RNG.
+    // Seeding is handled internally by TspNeighbourhood's own RNG
     void seed(long s) {}
 };
 

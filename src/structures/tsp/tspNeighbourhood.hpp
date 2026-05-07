@@ -5,8 +5,6 @@
 #include <random>
 
 // Neighbourhood operator for TSP-style ordering of waypoints.
-// PointsList is not a point_nd, so this class does not inherit from the AMSC
-// library's templatised NeighbourhoodExtractor; it mirrors the same interface instead.
 class TspNeighbourhood {
 public:
     using PointType = PointsList;

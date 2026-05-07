@@ -3,10 +3,8 @@
 
 #include "obstacle.hpp"
 
-// Upright infinite cylinder obstacle defined by a center (z must be 0),
-// a hard radius (collision zone), a height, and a soft buffer zone around the radius.
 class CylinderObstacle: public Obstacle{
-    Point center; // z of the center must be zero (cylinder axis is vertical)
+    Point center; // z of the center must be zero 
     double radius;
     double height;
     double buffer; // soft penalty zone thickness outside the hard radius
@@ -19,9 +17,7 @@ public:
     // Returns 0 if the drone is above the obstacle height.
     double distance(Drone* drone) const;
 
-    // Computes the penalty cost for segment A→B.
-    // Returns infinity if the closest point on the segment falls inside the hard radius,
-    // a linear penalty proportional to penetration depth in the buffer zone, or 0 if clear.
+    // Computes the penalty cost for segment 
     double segmentCost(const Point& A, const Point& B) const override;
 };
 

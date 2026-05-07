@@ -20,26 +20,23 @@
 #include <memory>
 #include <omp.h>
 
-// Axis-aligned bounding box for a cluster, with an optional safety margin.
+// Axis-aligned bounding box for a cluster, with an optional safety margin
 struct SegmentBounds { double xMin, xMax, yMin, yMax; };
 
-// Computes the XY bounding box of ordered waypoints and expands it by a margin.
-// marginFactor: fractional expansion (e.g. 0.2 = 20%); marginMin: absolute minimum margin.
-// Declared here, implemented in segmentOptimizer.cpp.
+// Computes the XY bounding box of ordered waypoints and expands it by a margin
 SegmentBounds computeBounds(const PointsList& ordered,
                             double marginFactor = 0.2,
                             double marginMin    = 50.0);
 
-// Result of a single classic SA run on one path segment.
+// Result of a single classic SA run on one path segment
 template<int NWaypoints>
 struct SegmentSAResult {
     point_nd<NWaypoints * 3> bestPoint;
     double                   fitness;
 };
 
-// Runs a single classic SA optimisation on the segment start→end.
-// The search domain is a sphere centred on the cluster's bounding box midpoint.
-// No side effects on any external state.
+// Runs a single classic SA optimisation 
+// The search domain is a sphere centred on the cluster's bounding box midpoint
 template<int NWaypoints>
 SegmentSAResult<NWaypoints> runSegmentSA(
     const Point&           segStart,
@@ -90,9 +87,7 @@ SegmentSAResult<NWaypoints> runSegmentSA(
     return { saResult, segObjective(saResult) };
 }
 
-// Multi-start SA: runs nRestarts independent SA restarts and returns the best result.
-// Total iteration budget is equalised with DRSTASA: nRestarts × maxIterPerRestart = popSize × maxIter × 4.
-// Parallelised with OpenMP when not already inside a parallel region.
+// runs nRestarts independent SA restarts and returns the best result
 template<int NWaypoints>
 SegmentSAResult<NWaypoints> runSegmentSAMultiStart(
     const Point&           segStart,
@@ -121,9 +116,7 @@ SegmentSAResult<NWaypoints> runSegmentSAMultiStart(
     return globalBest;
 }
 
-// Holds the results of both optimisers for a single segment.
-// Both paths contain start + waypoints but NOT the segment end-point,
-// which the caller appends when assembling the full route.
+// Holds the results of both optimisers for a single segment
 struct SegmentResult {
     PointsList saPath;
     PointsList drstasaPath;
@@ -131,14 +124,13 @@ struct SegmentResult {
     double     drstasaFit;
 };
 
-// Appends all points of src to dest.
+// Appends all points of src to dest
 inline void appendPath(PointsList& dest, const PointsList& src) {
     for (int w = 0; w < src.size(); ++w)
         dest.addPoint(Point(src.getX(w), src.getY(w), src.getZ(w), -1));
 }
 
-// Runs both classic SA and DRSTASA on the segment start→end and returns both paths.
-// The returned paths contain start + waypoints but NOT the end-point.
+// Runs both classic SA and DRSTASA on the segment and returns both paths
 template <int NWaypoints>
 SegmentResult optimizeSegment(
     const Point&          segStart,
@@ -161,7 +153,7 @@ SegmentResult optimizeSegment(
         return (std::isinf(cost) || std::isnan(cost)) ? 1e12 : cost;
     };
 
-    // ── Classic SA ───────────────────────────────────────────────────────────
+    // SA
     Lhs lhs(bounds.xMin, bounds.xMax, bounds.yMin, bounds.yMax, zMin, zMax, NWaypoints, -1);
     point_nd<Dim> startPoint = lhs.toPointNd<NWaypoints>();
 
@@ -193,7 +185,7 @@ SegmentResult optimizeSegment(
     for (int w = 0; w < NWaypoints; ++w)
         res.saPath.addPoint(Point(saResult[w*3+0], saResult[w*3+1], saResult[w*3+2], -1));
 
-    // ── DRSTASA ──────────────────────────────────────────────────────────────
+    // DRSTASA 
     DRSTASA drstasa(fitness, drsCfg);
     PointsList drstasaSeg = drstasa.run(segStart, segEnd);
     res.drstasaFit = drstasa.lastBestFit();

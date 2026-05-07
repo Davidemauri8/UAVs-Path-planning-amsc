@@ -11,21 +11,15 @@
 #include "scheduler/scheduler.hpp"
 #include <omp.h>
 
-// Aggregated benchmark output: cumulative fitness for SA and DRSTASA paths,
-// and total wall-clock time for the full optimisation run.
+// Aggregated benchmark output
 struct BenchmarkResult {
     double saFit;
     double drstasaFit;
     double wallTime;
 };
 
-// Runs the full path-planning pipeline on a pre-clustered point set:
-//   1. For each cluster, order waypoints with TSP-SA.
-//   2. For each consecutive pair of ordered waypoints, optimise the connecting
-//      segment with both multi-start SA and DRSTASA.
-//   3. Accumulate both optimised paths and their fitness scores.
-//
-// numThreads=1 runs serially; numThreads>1 distributes clusters across OMP threads.
+// Runs the full pipeline 
+// numThreads=1 runs serially; numThreads>1 distributes clusters across OMP threads
 template<int NWaypoints>
 BenchmarkResult runPipelineOptimization(
     const PointsList&      allPoints,

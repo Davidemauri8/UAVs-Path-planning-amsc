@@ -15,8 +15,7 @@ double CylinderObstacle::distance(Drone* drone) const {
 }
 
 double CylinderObstacle::segmentCost(const Point& A, const Point& B) const {
-    // Find the closest point on segment A→B to the cylinder center using
-    // a clamped projection parameter t in [0,1].
+    // Find the closest point on segment to the cylinder center 
     Point v = B.diff(A);
     Point w = center.diff(A);
 

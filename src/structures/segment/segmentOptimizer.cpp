@@ -1,8 +1,7 @@
 #include "segmentOptimizer.hpp"
 #include <algorithm>
 
-// Computes the XY bounding box of ordered waypoints, then expands each side by
-// max(marginMin, extent * marginFactor) to give the optimisers room to explore.
+// Computes the XY bounding box of ordered waypoints 
 SegmentBounds computeBounds(const PointsList& ordered,
                             double marginFactor, double marginMin)
 {

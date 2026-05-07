@@ -1,7 +1,7 @@
 #include "point.hpp"
 #include <cmath>
 
-// Member initializer list avoids a default construction followed by assignment.
+// Member initializer list avoids a default construction followed by assignment
 Point::Point() : x(0), y(0), z(0), idCluster(-1) {}
 
 Point::Point(double x, double y, double z, int idCluster)
