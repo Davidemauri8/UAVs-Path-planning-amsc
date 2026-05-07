@@ -14,8 +14,6 @@
 #include "pointsList.hpp"
 
 // K-Means clustering for 3D points.
-// Groups waypoints into K spatial clusters so that each cluster can be
-// optimised independently by a separate TSP+SA segment-optimiser.
 class KMeans {
 private:
     int K;
@@ -23,7 +21,7 @@ private:
     unsigned int seed_;
     PointsList centroids;
 
-    // Selects K random points from the dataset as initial centroids.
+    // Selects K random points from the dataset as centroids
     void initializeCentroids(PointsList& points) {
         std::mt19937 gen(seed_);
         std::uniform_int_distribution<> dis(0, points.size() - 1);
@@ -39,8 +37,6 @@ private:
 public:
     KMeans(int k, int iter, unsigned int seed = 42) : K(k), max_iterations(iter), seed_(seed) {}
 
-    // Runs the K-Means algorithm: assigns each point to the nearest centroid,
-    // recomputes centroids as cluster means, and repeats until convergence or max_iterations.
     void run(PointsList& points) {
         if (points.size() < K) return;
 
@@ -49,7 +45,7 @@ public:
         for (int iter = 0; iter < max_iterations; ++iter) {
             bool changed = false;
 
-            // Assign each point to the nearest centroid.
+            // Assign each point to the nearest centroid
             for (int i = 0; i < points.size(); ++i) {
 				Point& p = points.extractPoint(i);
 
@@ -70,7 +66,7 @@ public:
                 }
             }
 
-            // Recompute each centroid as the mean of its assigned points.
+            // Recompute each centroid as the mean of its points
             std::vector<double> sumX(K, 0.0), sumY(K, 0.0), sumZ(K, 0.0);
             std::vector<int> counts(K, 0);
 
