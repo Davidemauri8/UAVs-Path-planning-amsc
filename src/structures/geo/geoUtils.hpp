@@ -3,16 +3,15 @@
 
 #include "structures/pointsList.hpp"
 
-// Reference origin for GPS↔metric coordinate conversions.
+// Reference origin for GPS to coordinate 
 struct GeoOrigin { double lat0; double lon0; };
 
 namespace GeoUtils {
 
-// Converts all points in-place from GPS (lon/lat degrees) to local metric coordinates
-// (metres relative to the origin lat0/lon0).
+// Converts all points from GPS to local metric coordinates
 void toMeters(PointsList& points, double lat0, double lon0);
 
-// Converts all points in-place from local metric coordinates back to GPS (lon/lat degrees).
+// Converts all points in-place from local metric coordinates back to GPS
 void toGPS   (PointsList& points, double lat0, double lon0);
 
 inline void toMeters(PointsList& points, const GeoOrigin& origin) {
@@ -22,6 +21,6 @@ inline void toGPS(PointsList& points, const GeoOrigin& origin) {
     toGPS(points, origin.lat0, origin.lon0);
 }
 
-} // namespace GeoUtils
+} 
 
 #endif
