@@ -8,7 +8,8 @@
 #include <limits>
 
 // Weights and altitude bounds used to combine the four fitness sub-functions.
-// All values are intentionally left at 0 — configure them in fitnessUtilities.cpp.
+// All values are intentionally left at 0.0.
+// Configure them in fitnessUtilities.cpp.
 struct FitnessWeights {
     double b1   = 0.0; // weight for path length (F1)
     double b2   = 0.0; // weight for obstacle/threat cost (F2)

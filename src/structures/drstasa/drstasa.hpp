@@ -15,7 +15,8 @@
 
 class DRSTASA {
 public:
-    // All values are intentionally left at 0 — configure them in fitnessUtilities.cpp.
+    // All values are intentionally left at 0.0. 
+    // Configure them in fitnessUtilities.cpp.
     struct Config {
         int    popSize    = 0;   // population size
         int    maxIter    = 0;   // maximum number of iterations
