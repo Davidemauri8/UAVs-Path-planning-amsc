@@ -22,7 +22,7 @@ double FitnessFunction::f2_threatCost(const PointsList& path) const {
         Point B(path.getX(i+1), path.getY(i+1), path.getZ(i+1), -1);
 
         for (const auto& obs : obstacles_) {
-            double cost = obs->segmentCost(A, B);
+            double cost = obs->segmentCost(A, B, w_.droneRadius);
             if (cost == INF) return INF;
             total += cost;
         }

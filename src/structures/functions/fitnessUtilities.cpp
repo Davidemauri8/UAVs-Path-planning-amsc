@@ -7,14 +7,15 @@
 // defined here and left at zero in the struct; only altitude bounds come from outside.
 FitnessWeights sampleFitnessWeights(double zMin, double zMax) {
     FitnessWeights weights;
-    weights.b1   = 5.0;
-    weights.b2   = 10.0;
-    weights.b3   = 1.0;
-    weights.b4   = 5.0;
-    weights.a1   = 1.0;
-    weights.a2   = 1.0;
-    weights.hMin = zMin;
-    weights.hMax = zMax;
+    weights.b1          = 5.0;
+    weights.b2          = 10.0;
+    weights.b3          = 1.0;
+    weights.b4          = 5.0;
+    weights.a1          = 1.0;
+    weights.a2          = 1.0;
+    weights.hMin        = zMin;
+    weights.hMax        = zMax;
+    weights.droneRadius = 1.5; // UAV footprint radius in meters
     return weights;
 }
 

@@ -13,9 +13,10 @@ public:
     // Returns the distance from the drone's current position to the obstacle surface.
     virtual double distance(Drone* drone) const = 0;
 
-    // Returns the penalty cost for the path segment passing through or near this obstacle
-    // Returns infinity if the segment intersects the obstacle body.
-    virtual double segmentCost(const Point& A, const Point& B) const = 0;
+    // Returns the penalty cost for the path segment passing through or near this obstacle.
+    // droneRadius inflates the hard collision boundary (Minkowski sum with drone footprint).
+    // Returns infinity if the segment intersects the inflated obstacle body.
+    virtual double segmentCost(const Point& A, const Point& B, double droneRadius = 0.0) const = 0;
 };
 
 #endif

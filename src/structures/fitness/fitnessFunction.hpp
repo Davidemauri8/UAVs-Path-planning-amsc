@@ -17,8 +17,9 @@ struct FitnessWeights {
     double b4   = 0.0; // weight for path smoothness (F4)
     double a1   = 0.0; // weight for horizontal turning angle inside F4
     double a2   = 0.0; // weight for vertical climb-angle variation inside F4
-    double hMin = 0.0; // minimum allowed flight altitude
-    double hMax = 0.0; // maximum allowed flight altitude
+    double hMin        = 0.0; // minimum allowed flight altitude
+    double hMax        = 0.0; // maximum allowed flight altitude
+    double droneRadius = 0.0; // physical footprint radius of the UAV (inflates obstacle boundaries)
 };
 
 // Multi-objective fitness function for UAV path evaluation.

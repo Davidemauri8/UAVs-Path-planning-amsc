@@ -14,8 +14,8 @@ double CylinderObstacle::distance(Drone* drone) const {
     return std::sqrt(dX*dX + dY*dY);
 }
 
-double CylinderObstacle::segmentCost(const Point& A, const Point& B) const {
-    // Find the closest point on segment to the cylinder center 
+double CylinderObstacle::segmentCost(const Point& A, const Point& B, double droneRadius) const {
+    // Find the closest point on segment to the cylinder center
     Point v = B.diff(A);
     Point w = center.diff(A);
 
@@ -27,10 +27,14 @@ double CylinderObstacle::segmentCost(const Point& A, const Point& B) const {
     Point close = A + (v * t);
     double d_k  = close.diff(center).norm();
 
-    if (d_k > buffer + radius)
+    // Effective thresholds inflated by the drone's physical footprint (Minkowski sum).
+    double hardRadius = radius + droneRadius;
+    double softRadius = radius + buffer + droneRadius;
+
+    if (d_k > softRadius)
         return 0.0;
-    else if (d_k <= radius)
+    else if (d_k <= hardRadius)
         return std::numeric_limits<double>::infinity(); // collision: path is illegal
     else
-        return (buffer + radius) - d_k; // linear penalty inside the buffer zone
+        return softRadius - d_k; // linear penalty inside the buffer zone
 }

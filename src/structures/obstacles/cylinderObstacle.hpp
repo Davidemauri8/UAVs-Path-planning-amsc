@@ -17,8 +17,8 @@ public:
     // Returns 0 if the drone is above the obstacle height.
     double distance(Drone* drone) const;
 
-    // Computes the penalty cost for segment 
-    double segmentCost(const Point& A, const Point& B) const override;
+    // Computes the penalty cost for segment AB, inflating the collision radius by droneRadius.
+    double segmentCost(const Point& A, const Point& B, double droneRadius = 0.0) const override;
 };
 
 #endif
