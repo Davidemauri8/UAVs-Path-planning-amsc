@@ -16,6 +16,8 @@ struct BenchmarkResult {
     double saFit;
     double drstasaFit;
     double wallTime;
+
+    PointsList bestPath;
 };
 
 // Runs the full pipeline 
