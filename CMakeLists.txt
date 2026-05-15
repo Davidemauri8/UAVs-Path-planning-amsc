@@ -74,3 +74,25 @@ set(SOURCES_TEST13
 )
 add_executable(test13 ${SOURCES_TEST13})
 target_link_libraries(test13 OpenMP::OpenMP_CXX)
+
+# L'Aquila survey benchmark (200 pts, 5 natural clusters, 6 obstacles)
+set(SOURCES_TEST14
+    src/test14.cpp
+    src/structures/point.cpp
+    src/structures/pointsList.cpp
+    src/structures/drone.cpp
+    src/structures/obstacles/cylinderObstacle.cpp
+    src/structures/fitness/fitnessFunction.cpp
+    src/structures/lhs/lhs.cpp
+    src/structures/drstasa/drstasa.cpp
+    src/structures/drstasa/stasaNeighbourhood.cpp
+    src/structures/drstasa/reverseLearnStrategy.cpp
+    src/structures/functions/fitnessUtilities.cpp
+    src/structures/geo/geoUtils.cpp
+    src/structures/segment/segmentOptimizer.cpp
+    src/simulatedAnnealing/controller/controller.cpp
+    src/exporters/pointsListExporter.cpp
+    src/exporters/pointsListReader.cpp
+)
+add_executable(test14 ${SOURCES_TEST14})
+target_link_libraries(test14 OpenMP::OpenMP_CXX)
