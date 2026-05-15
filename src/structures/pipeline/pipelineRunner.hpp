@@ -31,7 +31,9 @@ BenchmarkResult runPipelineOptimization(
     omp_set_dynamic(0);
     omp_set_num_threads(numThreads);
 
-    const DRSTASA::Config drsCfg(NWaypoints, zMin, zMax);
+    DRSTASA::Config drsCfg = GetConfigurationDRST(NWaypoints);
+    drsCfg.zMin = zMin;
+    drsCfg.zMax = zMax;
     PointsList saPath, drstasaPath;
     double totalSAFit = 0.0, totalDRSTASAFit = 0.0;
 

@@ -69,15 +69,18 @@ double FitnessFunction::f4_smoothness(const PointsList& path) const {
         if (n1 < 1e-9 || n2 < 1e-9) continue; // skip overlapping waypoints
 
         // phi: horizontal turning angle between v1 and v2.
-        double dot   = v1 * v2;
         double cross = v1.cross2D(v2);
-        double phi   = std::atan2(std::abs(cross), dot);
+        double phi   = std::atan(std::abs(cross) / (n1 * n2));
         sumPhi += phi;
 
         // psi: climb angle of the second segment.
         double dz  = p2.getZ() - p1.getZ();
         double dxy = std::sqrt(v2.getX() * v2.getX() + v2.getY() * v2.getY());
-        double psi = (dxy > 1e-9) ? std::atan2(dz, dxy) : 0.0;
+        double psi;
+        if (dxy > 1e-9)
+            psi = std::atan(dz / dxy);
+        else
+            psi = 0.0;
 
         // Accumulate the change in climb angle, not the absolute angle.
         if (i > 0) sumPsi += std::abs(psi - prevPsi);
