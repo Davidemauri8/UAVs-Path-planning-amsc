@@ -32,6 +32,7 @@ set(COMMON_SOURCES
     src/exporters/pointsListReader.cpp
 )
 
+<<<<<<< Updated upstream
 # --- TARGET: TEST 14 ---
 add_executable(test14 src/test14.cpp ${COMMON_SOURCES})
 if(OpenMP_CXX_FOUND)
@@ -51,3 +52,48 @@ add_executable(test12 src/test12.cpp ${COMMON_SOURCES})
 if(OpenMP_CXX_FOUND)
     target_link_libraries(test12 PUBLIC OpenMP::OpenMP_CXX)
 endif()
+=======
+# L'Aquila survey benchmark (200 pts, 5 natural clusters, 6 obstacles)
+set(SOURCES_TEST14
+    src/test14.cpp
+    src/structures/point.cpp
+    src/structures/pointsList.cpp
+    src/structures/drone.cpp
+    src/structures/obstacles/cylinderObstacle.cpp
+    src/structures/fitness/fitnessFunction.cpp
+    src/structures/lhs/lhs.cpp
+    src/structures/drstasa/drstasa.cpp
+    src/structures/drstasa/stasaNeighbourhood.cpp
+    src/structures/drstasa/reverseLearnStrategy.cpp
+    src/structures/functions/fitnessUtilities.cpp
+    src/structures/geo/geoUtils.cpp
+    src/structures/segment/segmentOptimizer.cpp
+    src/simulatedAnnealing/controller/controller.cpp
+    src/exporters/pointsListExporter.cpp
+    src/exporters/pointsListReader.cpp
+)
+add_executable(test14 ${SOURCES_TEST14})
+target_link_libraries(test14 OpenMP::OpenMP_CXX)
+
+# Strong-scaling benchmark: K=10 fixed, sweep threads 1..maxThreads -> benchmark16.csv
+set(SOURCES_TEST16
+    src/test16.cpp
+    src/structures/point.cpp
+    src/structures/pointsList.cpp
+    src/structures/drone.cpp
+    src/structures/obstacles/cylinderObstacle.cpp
+    src/structures/fitness/fitnessFunction.cpp
+    src/structures/lhs/lhs.cpp
+    src/structures/drstasa/drstasa.cpp
+    src/structures/drstasa/stasaNeighbourhood.cpp
+    src/structures/drstasa/reverseLearnStrategy.cpp
+    src/structures/functions/fitnessUtilities.cpp
+    src/structures/geo/geoUtils.cpp
+    src/structures/segment/segmentOptimizer.cpp
+    src/simulatedAnnealing/controller/controller.cpp
+    src/exporters/pointsListExporter.cpp
+    src/exporters/pointsListReader.cpp
+)
+add_executable(test16 ${SOURCES_TEST16})
+target_link_libraries(test16 OpenMP::OpenMP_CXX)
+>>>>>>> Stashed changes
