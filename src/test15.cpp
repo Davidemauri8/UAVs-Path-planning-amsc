@@ -42,11 +42,11 @@ static FitnessFunction makeLAquilaFitness(double zMin, double zMax,
         toPlot.push_back({x, y, r, zBase, zBase + height});
     };
 
-    // Ostacoli sul corridoio di volo – coordinate in metri
-    addCylinder(  200.0,  500.0, 120.0, 200.0,  80.0);  // cilindro nord-centro (alto)
-    addCylinder( -400.0,  200.0, 100.0, 180.0,  90.0);  // cilindro ovest
-    addCylinder(  500.0, -300.0, 110.0, 190.0,  85.0);  // cilindro est-sud
-    addCylinder( -100.0, -500.0,  90.0, 170.0,  75.0);
+    // Ostacoli posizionati tra i waypoint per forzare routing attorno ad essi
+    addCylinder(  200.0,  420.0, 120.0, 215.0,  75.0);  // nord (tra pt 5-6-7)
+    addCylinder( -370.0,  160.0, 105.0, 185.0,  85.0);  // ovest (tra pt 7-8-9)
+    addCylinder(  460.0, -260.0, 115.0, 200.0,  80.0);  // est-sud (tra pt 3-4)
+    addCylinder( -120.0, -430.0,  95.0, 168.0,  75.0);  // sud (tra pt 1-2-9)
 
     return FitnessFunction(obs, sampleFitnessWeights(zMin, zMax));
 }
@@ -75,10 +75,6 @@ int main()
     // ── 4. Inizializzazione Plotter ───────────────────────────────────────────
     Plotter plotter;
     plotter.send("set title 'UAV Path Planning - L Aquila Survey'");
-
-    // Il vrange deve coprire l'asse Z dei cilindri parametrici.
-    // Usiamo un range leggermente più ampio di [zMin, zMax] per vedere
-    // anche la base degli ostacoli più bassi.
     plotter.setVRange(0.0, zMax + 50.0);
 
     // Accoda i cilindri al plotter (disegnati come superfici 3D)
@@ -88,13 +84,9 @@ int main()
 
     // ── 5. Ciclo di ottimizzazione e raccolta path ────────────────────────────
     const int maxThreads = omp_get_max_threads();
-    const std::vector<int> kValues = {10};
+    const std::vector<int> kValues = {1};
 
-    // Palette colori per le tre missioni
-    const std::vector<std::string> colors = {"blue", "green", "orange"};
-
-    for (size_t ki = 0; ki < kValues.size(); ++ki) {
-        int K = kValues[ki];
+    for (int K : kValues) {
         std::cout << "Ottimizzazione per K=" << K << "..." << std::flush;
 
         PointsList pts = allPointsBase;
@@ -104,23 +96,17 @@ int main()
         BenchmarkResult res = runPipelineOptimization<NWaypoints>(
             pts, K, fitness, zMin, zMax, maxThreads);
 
-        // Accoda la path: NON la disegna ancora (nessun splot parziale)
-        plotter.addPath(res.bestPath,
-                        "Mission K=" + std::to_string(K),
-                        colors[ki]);
+        plotter.addPath(res.saPath,      "SA (K=" + std::to_string(K) + ")",      "orange");
+        plotter.addPath(res.drstasaPath, "DRSTASA (K=" + std::to_string(K) + ")", "blue");
 
         std::cout << " Completato in " << res.wallTime << "s\n";
     }
 
-    // ── 6. Rendering finale ───────────────────────────────────────────────────
-    // Un unico splot con tutti i cilindri + tutte e tre le path
-    plotter.send("set title 'Confronto Missioni UAV - L Aquila (K=5, 10, 20)'");
-    plotter.flush();   // <-- qui viene generato l'unico splot combinato
-
-    // Opzionale: aggiunge la legenda e migliora la vista
+    // ── 7. Rendering finale ───────────────────────────────────────────────────
+    plotter.send("set title 'Confronto Missioni UAV - L Aquila (K=1)'");
     plotter.send("set key top right");
-    plotter.send("set view 55, 25");   // angolo di vista più leggibile
-    plotter.send("replot");
+    plotter.send("set view 55, 25");
+    plotter.flush();   // unico splot con terreno + cilindri + path
 
     // Aspetta input prima di chiudere la finestra
     std::cout << "Premi INVIO per uscire...\n";

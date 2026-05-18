@@ -12,11 +12,17 @@ struct PathEntry {
     PointsList  path;
     std::string title;
     std::string color;
-    bool        isScatter;  // true = punti senza linee, false = linespoints
+    bool        isScatter;
 };
 
 struct CylinderPlotData {
     double x, y, r, hBase, hTop;
+};
+
+struct TerrainGrid {
+    int    nx, ny;
+    double xMin, xMax, yMin, yMax;
+    std::vector<std::vector<double>> z;  // z[iy][ix]
 };
 
 class Plotter {
@@ -24,6 +30,8 @@ private:
     FILE* gnuplotPipe;
     std::vector<PathEntry>        pendingPaths;
     std::vector<CylinderPlotData> cylinders;
+    bool        hasTerrain = false;
+    TerrainGrid terrain;
 
     FILE* openPipe() {
 #ifdef _WIN32
@@ -42,7 +50,7 @@ private:
     }
 
 public:
-    Plotter() : gnuplotPipe(nullptr) {
+    Plotter() : gnuplotPipe(nullptr), hasTerrain(false) {
         gnuplotPipe = openPipe();
         if (!gnuplotPipe) {
             std::cerr << "Errore: Gnuplot non trovato!\n";
@@ -56,6 +64,7 @@ public:
         send("set zlabel 'Z (m)'");
         send("set parametric");
         send("set urange [0:2*pi]");
+        send("set vrange [0:1]");
         send("set style data linespoints");
         send("unset colorbox");
         send("set hidden3d");
@@ -69,7 +78,6 @@ public:
         fflush(gnuplotPipe);
     }
 
-    // Accoda una path connessa (linespoints)
     void addPath(const PointsList& path,
                  const std::string& title = "UAV Path",
                  const std::string& color = "blue") {
@@ -77,7 +85,6 @@ public:
         pendingPaths.push_back({path, title, color, false});
     }
 
-    // Accoda punti senza linee di collegamento (punti CSV, centroidi, ecc.)
     void addScatter(const PointsList& points,
                     const std::string& title = "Points",
                     const std::string& color = "gray") {
@@ -90,48 +97,57 @@ public:
         cylinders.push_back({cx, cy, r, zBase, zTop});
     }
 
+    void setTerrain(const TerrainGrid& t) {
+        terrain = t;
+        hasTerrain = true;
+    }
+
+    // Sets the z-axis display range
     void setVRange(double zMin, double zMax) {
         char buf[128];
-        snprintf(buf, sizeof(buf), "set vrange [%.2f:%.2f]", zMin, zMax);
+        snprintf(buf, sizeof(buf), "set zrange [%.2f:%.2f]", zMin, zMax);
         send(buf);
     }
 
-    // Unico splot: cilindri wireframe rossi + scatter CSV grigi
-    //              + centroidi neri + path DRSTASA blu
     void flush() {
         if (!gnuplotPipe) return;
-        if (pendingPaths.empty() && cylinders.empty()) return;
+        if (!hasTerrain && pendingPaths.empty() && cylinders.empty()) return;
 
         std::string splotCmd = "splot ";
         bool first = true;
 
-        // ── Cilindri ─────────────────────────────────────────────────────────
+        // ── Terrain (first, so cylinders/paths render on top) ─────────────────
+        if (hasTerrain) {
+            splotCmd += "'-' with pm3d title 'Terrain'";
+            first = false;
+        }
+
+        // ── Cylinders ─────────────────────────────────────────────────────────
         for (size_t i = 0; i < cylinders.size(); ++i) {
             const auto& c = cylinders[i];
             if (!first) splotCmd += ", ";
             first = false;
 
             char buf[512];
+            // vrange is [0:1]; map v to [hBase, hTop] per cylinder
             snprintf(buf, sizeof(buf),
-                "%.4f+%.4f*cos(u), %.4f+%.4f*sin(u), v "
+                "%.4f+%.4f*cos(u), %.4f+%.4f*sin(u), %.4f+(%.4f-%.4f)*v "
                 "with lines lc rgb 'red' lw 1 notitle",
-                c.x, c.r, c.y, c.r);
+                c.x, c.r, c.y, c.r, c.hBase, c.hTop, c.hBase);
             splotCmd += buf;
 
-            // Disco superiore e inferiore (dati inline)
+            // Top and bottom disks as inline data
             splotCmd += ", '-' with lines lc rgb 'red' lw 1 notitle";
             splotCmd += ", '-' with lines lc rgb 'red' lw 1 notitle";
         }
 
-        // ── Path / scatter ───────────────────────────────────────────────────
+        // ── Paths / scatter ───────────────────────────────────────────────────
         for (size_t i = 0; i < pendingPaths.size(); ++i) {
             if (!first) splotCmd += ", ";
             first = false;
             const auto& pe = pendingPaths[i];
             char buf[256];
-
             if (pe.isScatter) {
-                // Centroidi: pallini neri più grandi; punti CSV: pallini grigi piccoli
                 int ps = (pe.color == "black") ? 2 : 1;
                 snprintf(buf, sizeof(buf),
                     "'-' with points pt 7 ps %d lc rgb '%s' title '%s'",
@@ -147,7 +163,22 @@ public:
         fprintf(gnuplotPipe, "%s\n", splotCmd.c_str());
         fflush(gnuplotPipe);
 
-        // ── Dati inline: dischi dei cilindri ─────────────────────────────────
+        // ── Inline data: terrain grid ─────────────────────────────────────────
+        if (hasTerrain) {
+            for (int iy = 0; iy < terrain.ny; ++iy) {
+                for (int ix = 0; ix < terrain.nx; ++ix) {
+                    double x = terrain.xMin + (terrain.xMax - terrain.xMin)
+                               * ix / (terrain.nx - 1);
+                    double y = terrain.yMin + (terrain.yMax - terrain.yMin)
+                               * iy / (terrain.ny - 1);
+                    fprintf(gnuplotPipe, "%f %f %f\n", x, y, terrain.z[iy][ix]);
+                }
+                fprintf(gnuplotPipe, "\n");  // blank line separates rows for gnuplot
+            }
+            fprintf(gnuplotPipe, "e\n");
+        }
+
+        // ── Inline data: cylinder disks ───────────────────────────────────────
         const int N = 36;
         for (const auto& c : cylinders) {
             for (int k = 0; k <= N; ++k) {
@@ -164,7 +195,7 @@ public:
             fprintf(gnuplotPipe, "e\n");
         }
 
-        // ── Dati inline: path e scatter ───────────────────────────────────────
+        // ── Inline data: paths and scatter ────────────────────────────────────
         for (const auto& pe : pendingPaths) {
             for (int j = 0; j < (int)pe.path.size(); ++j) {
                 fprintf(gnuplotPipe, "%f %f %f\n",

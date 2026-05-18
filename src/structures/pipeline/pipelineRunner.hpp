@@ -13,11 +13,11 @@
 
 // Aggregated benchmark output
 struct BenchmarkResult {
-    double saFit;
-    double drstasaFit;
-    double wallTime;
-
-    PointsList bestPath;
+    double    saFit;
+    double    drstasaFit;
+    double    wallTime;
+    PointsList drstasaPath;
+    PointsList saPath;
 };
 
 // Runs the full pipeline 
@@ -93,7 +93,7 @@ BenchmarkResult runPipelineOptimization(
         { appendPath(saPath, localSA); appendPath(drstasaPath, localDRS); }
     }
 
-    return { totalSAFit, totalDRSTASAFit, omp_get_wtime() - t0 };
+    return { totalSAFit, totalDRSTASAFit, omp_get_wtime() - t0, drstasaPath, saPath };
 }
 
 #endif
