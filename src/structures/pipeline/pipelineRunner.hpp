@@ -13,11 +13,14 @@
 
 // Aggregated benchmark output
 struct BenchmarkResult {
-    double    saFit;
-    double    drstasaFit;
-    double    wallTime;
+    double     saFit;
+    double     drstasaFit;
+    double     wallTime;
     PointsList drstasaPath;
     PointsList saPath;
+    std::vector<PointsList> saPerCluster;
+    std::vector<PointsList> drstasaPerCluster;
+    std::vector<PointsList> orderedClusters;   // waypoint TSP-ordinati (input originale)
 };
 
 // Runs the full pipeline 
@@ -37,6 +40,7 @@ BenchmarkResult runPipelineOptimization(
     drsCfg.zMin = zMin;
     drsCfg.zMax = zMax;
     PointsList saPath, drstasaPath;
+    std::vector<PointsList> saPerCluster(K), drstasaPerCluster(K), orderedClusters(K);
     double totalSAFit = 0.0, totalDRSTASAFit = 0.0;
 
     double t0 = omp_get_wtime();
@@ -63,7 +67,11 @@ BenchmarkResult runPipelineOptimization(
             Point segStart(ordered.getX(i),   ordered.getY(i),   ordered.getZ(i),   -1);
             Point segEnd  (ordered.getX(i+1), ordered.getY(i+1), ordered.getZ(i+1), -1);
 
-            SegmentBounds b = computeBounds(ordered);
+            // Bounds locali al segmento (non all'intero cluster)
+            PointsList segPair;
+            segPair.addPoint(segStart);
+            segPair.addPoint(segEnd);
+            SegmentBounds b = computeBounds(segPair);
 
             // Classic multi-start SA for this segment.
             auto saRes = runSegmentSAMultiStart<NWaypoints>(
@@ -90,10 +98,17 @@ BenchmarkResult runPipelineOptimization(
         localDRS.addPoint(lastPt);
 
         #pragma omp critical
-        { appendPath(saPath, localSA); appendPath(drstasaPath, localDRS); }
+        {
+            appendPath(saPath, localSA);
+            appendPath(drstasaPath, localDRS);
+            saPerCluster[k]      = localSA;
+            drstasaPerCluster[k] = localDRS;
+            orderedClusters[k]   = ordered;
+        }
     }
 
-    return { totalSAFit, totalDRSTASAFit, omp_get_wtime() - t0, drstasaPath, saPath };
+    return { totalSAFit, totalDRSTASAFit, omp_get_wtime() - t0,
+             drstasaPath, saPath, saPerCluster, drstasaPerCluster, orderedClusters };
 }
 
 #endif

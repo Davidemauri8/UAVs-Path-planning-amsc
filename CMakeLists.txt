@@ -33,10 +33,10 @@ set(COMMON_SOURCES
 )
 
 # --- TARGET: TEST 14 ---
-add_executable(test14 src/test14.cpp ${COMMON_SOURCES})
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(test14 PUBLIC OpenMP::OpenMP_CXX)
-endif()
+#add_executable(test14 src/test14.cpp ${COMMON_SOURCES})
+#if(OpenMP_CXX_FOUND)
+#    target_link_libraries(test14 PUBLIC OpenMP::OpenMP_CXX)
+#endif()
 
 # --- TARGET: TEST 15 (Quello che ti dava errore) ---
 add_executable(test15 src/test15.cpp ${COMMON_SOURCES})
@@ -45,9 +45,15 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(test15 PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
-# --- TARGET ALTRI (Esempio test11, 12 se necessari) ---
-add_executable(test11 src/test11.cpp ${COMMON_SOURCES})
-add_executable(test12 src/test12.cpp ${COMMON_SOURCES})
+# --- TARGET: TESTICELAND ---
+add_executable(testiceland src/testiceland.cpp ${COMMON_SOURCES})
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(test12 PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(testiceland PUBLIC OpenMP::OpenMP_CXX)
 endif()
+
+# --- TARGET ALTRI (Esempio test11, 12 se necessari) ---
+#add_executable(test11 src/test11.cpp ${COMMON_SOURCES})
+#add_executable(test12 src/test12.cpp ${COMMON_SOURCES})
+#if(OpenMP_CXX_FOUND)
+#    target_link_libraries(test12 PUBLIC OpenMP::OpenMP_CXX)
+#endif()

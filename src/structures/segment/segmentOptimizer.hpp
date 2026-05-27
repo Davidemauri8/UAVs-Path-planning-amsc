@@ -11,7 +11,8 @@
 #include "geometry/point.hpp"
 #include "domain/domain.hpp"
 #include "scheduler/scheduler.hpp"
-#include "sampler/local_sampler.hpp"
+#include "sampler/local_sampler_fixed.hpp"
+#include <cmath>
 #include "criterion/criterion.hpp"
 #include "algorithms/annealing_policy.hpp"
 #include "algorithms/serial_simulated_annealing.hpp"
@@ -68,18 +69,19 @@ SegmentSAResult<NWaypoints> runSegmentSA(
         domCenter[w*3+1] = (cyMin + cyMax) / 2.0;
         domCenter[w*3+2] = (zMin  + zMax)  / 2.0;
     }
-    double domRadius = std::sqrt(std::pow(cxMax - cxMin, 2) +
+    double domRadius = std::sqrt(NWaypoints) *
+                       std::sqrt(std::pow(cxMax - cxMin, 2) +
                                  std::pow(cyMax - cyMin, 2) +
                                  std::pow(zMax  - zMin,  2));
 
     auto domain    = RnDomainFactory::make_sphere(domRadius, domCenter);
     auto saNeigh   = std::make_shared<CircleNeighbourhood<Dim>>(domain, domRadius * 0.1);
-    auto saSampler = std::make_shared<LocalSampler<CircleNeighbourhood<Dim>>>(0.1);
+    auto saSampler = std::make_shared<LocalSamplerFixed<CircleNeighbourhood<Dim>>>(0.1);
     auto saCrit    = std::make_shared<MetropolisCriterion>();
     auto saSched   = std::make_shared<ExponentialScheduler>(100.0, 0.01, 1, 0.95);
     saNeigh->from(startPoint, startPoint);
 
-    AnnealingExecutionPolicy<LocalSampler<CircleNeighbourhood<Dim>>> saPolicy(
+    AnnealingExecutionPolicy<LocalSamplerFixed<CircleNeighbourhood<Dim>>> saPolicy(
         saCrit, saSampler, saSched, StoppingCriterion::temp_zero, *saNeigh);
     SerialSimulatedAnnealing ssa(maxIter);
     auto saResult = ssa.run(segObjective, startPoint, saPolicy);
@@ -163,18 +165,19 @@ SegmentResult optimizeSegment(
         domCenter[w*3+1] = (bounds.yMin + bounds.yMax) / 2.0;
         domCenter[w*3+2] = (zMin + zMax) / 2.0;
     }
-    double domRadius = std::sqrt(std::pow(bounds.xMax - bounds.xMin, 2) +
+    double domRadius = std::sqrt(NWaypoints) *
+                       std::sqrt(std::pow(bounds.xMax - bounds.xMin, 2) +
                                  std::pow(bounds.yMax - bounds.yMin, 2) +
                                  std::pow(zMax - zMin, 2));
 
     auto domain    = RnDomainFactory::make_sphere(domRadius, domCenter);
     auto saNeigh   = std::make_shared<CircleNeighbourhood<Dim>>(domain, domRadius * 0.1);
-    auto saSampler = std::make_shared<LocalSampler<CircleNeighbourhood<Dim>>>(0.1);
+    auto saSampler = std::make_shared<LocalSamplerFixed<CircleNeighbourhood<Dim>>>(0.1);
     auto saCrit    = std::make_shared<MetropolisCriterion>();
     auto saSched   = std::make_shared<ExponentialScheduler>(100.0, 0.01, 1, 0.95);
     saNeigh->from(startPoint, startPoint);
 
-    AnnealingExecutionPolicy<LocalSampler<CircleNeighbourhood<Dim>>> saPolicy(
+    AnnealingExecutionPolicy<LocalSamplerFixed<CircleNeighbourhood<Dim>>> saPolicy(
         saCrit, saSampler, saSched, StoppingCriterion::temp_zero, *saNeigh);
     SerialSimulatedAnnealing ssa(6000);
     auto saResult = ssa.run(segObjective, startPoint, saPolicy);
