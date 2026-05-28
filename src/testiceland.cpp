@@ -7,7 +7,7 @@
 
 int main()
 {
-    constexpr int NWaypoints = 5;
+    constexpr int NWaypoints = 2;
     constexpr int K          = 4;
     const double  zMin = 60.0, zMax = 200.0;
 
