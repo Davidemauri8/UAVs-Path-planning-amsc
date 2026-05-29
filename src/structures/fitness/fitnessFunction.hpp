@@ -34,6 +34,8 @@ public:
     // Evaluates F2 and F3 first and short-circuits to infinity on constraint violation.
     double evaluate(const PointsList& path) const;
 
+    const std::vector<std::shared_ptr<Obstacle>>& getObstacles() const { return obstacles_; }
+
 private:
     double f1_pathLength  (const PointsList& path) const; // total Euclidean path length
     double f2_threatCost  (const PointsList& path) const; // cumulative obstacle penalty

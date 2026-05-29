@@ -11,9 +11,6 @@
 // Returns a FitnessWeights struct with default tuning values for the given altitude band.
 FitnessWeights sampleFitnessWeights(double zMin, double zMax);
 
-// Returns a FitnessFunction with obstacles and default weights.
-FitnessFunction sampleFitnessFunction(double zMin, double zMax);
-
 // Returns a FitnessFunction with obstacles for the main pipeline.
 FitnessFunction makeDefaultFitness(double zMin, double zMax);
 

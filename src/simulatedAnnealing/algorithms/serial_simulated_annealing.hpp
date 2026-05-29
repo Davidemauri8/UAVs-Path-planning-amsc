@@ -3,6 +3,7 @@
 #define SERIAL_SIMULATED_ANNEALING
 
 #include "simulated_annealing.hpp"
+#include "../sampler/exception.hpp"
 
 class SerialSimulatedAnnealing : public SimulatedAnnealing {
 
@@ -35,8 +36,17 @@ public:
 			for (int repeat = 0; repeat < param->stab_it(); ++repeat) {
 
 				policy.neighbourhood().from(prev, pt);
-				auto new_p = policy.sampler()->sample(
-					policy.neighbourhood(), 1000);
+
+				PointType new_p = pt;
+				try {
+					new_p = policy.sampler()->sample(
+						policy.neighbourhood(), 1000);
+				} catch (const sa::SamplerFailure&) {
+					// Domain and step-size mismatch (common when x/y span is
+					// orders of magnitude larger than the z range): skip this
+					// inner iteration rather than crashing.
+					continue;
+				}
 
 				new_energy = func(new_p);
 				// Accept the new value stochastically based on the energy

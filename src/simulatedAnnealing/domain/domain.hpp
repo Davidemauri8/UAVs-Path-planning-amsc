@@ -179,6 +179,12 @@ public:
 		}
 	}
 
+	RectangleDomain(const point_nd<Dim>& init_sides, point_nd<Dim> ref)
+		: reference(ref) {
+		for (int i = 0; i < Dim; ++i)
+			sides[i] = init_sides[i];
+	}
+
 	void output_print(std::ostream& os) const override {
 		os << "Hyperrectangle of sides [";
 		for (int i = 0; i < Dim - 1; ++i)
@@ -188,7 +194,7 @@ public:
 
 	bool contains(const void* p) const override {
 		// TODO: warning
-		const auto po = reinterpret_cast<point_nd<Dim>*>(p);
+		const auto po = reinterpret_cast<const point_nd<Dim>*>(p);
 		bool is_contained = 1;
 		for (int i = 0; i < Dim; ++i)
 			is_contained &= (reference[i] < (*po)[i] && (*po)[i] < reference[i] + sides[i]);
@@ -262,7 +268,7 @@ public:
 
 	bool contains(const void* p) const override {
 		// TODO: warning
-		const auto po = reinterpret_cast<point_nd<Dim>*>(p);
+		const auto po = reinterpret_cast<const point_nd<Dim>*>(p);
 		bool is_contained = 1;
 		double d;
 		for (int i = 0; i < Dim; ++i) {
@@ -290,6 +296,13 @@ public:
 		std::initializer_list<double> list, point_nd<Dim> reference
 	) {
 		return std::make_shared<RectangleDomain<Dim>>(list, reference);
+	}
+
+	template <domain_dim Dim>
+	static std::shared_ptr<RnDomain<Dim>> make_hyperrectangle(
+		const point_nd<Dim>& sides, point_nd<Dim> reference
+	) {
+		return std::make_shared<RectangleDomain<Dim>>(sides, reference);
 	}
 
 	template <domain_dim Dim>

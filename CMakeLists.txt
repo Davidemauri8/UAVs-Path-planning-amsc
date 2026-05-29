@@ -39,16 +39,22 @@ set(COMMON_SOURCES
 #endif()
 
 # --- TARGET: TEST 15 (Quello che ti dava errore) ---
-add_executable(test15 src/test15.cpp ${COMMON_SOURCES})
-if(OpenMP_CXX_FOUND)
+#add_executable(test15 src/test15.cpp ${COMMON_SOURCES})
+#if(OpenMP_CXX_FOUND)
     # Questo comando aggiunge sia i flag di compilazione che il link alle librerie
-    target_link_libraries(test15 PUBLIC OpenMP::OpenMP_CXX)
-endif()
+    #target_link_libraries(test15 PUBLIC OpenMP::OpenMP_CXX)
+#endif()
 
 # --- TARGET: TESTICELAND ---
 add_executable(testiceland src/testiceland.cpp ${COMMON_SOURCES})
 if(OpenMP_CXX_FOUND)
     target_link_libraries(testiceland PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+# --- TARGET: TESTOBSTACLES ---
+add_executable(testobstacles src/testobstacles.cpp ${COMMON_SOURCES})
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(testobstacles PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
 # --- TARGET ALTRI (Esempio test11, 12 se necessari) ---

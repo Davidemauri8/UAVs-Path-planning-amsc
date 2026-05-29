@@ -26,8 +26,8 @@ struct SegmentBounds { double xMin, xMax, yMin, yMax; };
 
 // Computes the XY bounding box of ordered waypoints and expands it by a margin
 SegmentBounds computeBounds(const PointsList& ordered,
-                            double marginFactor = 0.2,
-                            double marginMin    = 50.0);
+                            double marginFactor = 1.0,
+                            double marginMin    = 10.0);
 
 // Result of a single classic SA run on one path segment
 template<int NWaypoints>
@@ -46,7 +46,7 @@ SegmentSAResult<NWaypoints> runSegmentSA(
     double cxMin, double cxMax,
     double cyMin, double cyMax,
     double zMin,  double zMax,
-    long   maxIter = 6000)
+    long   maxIter = 5000)
 {
     constexpr int Dim = NWaypoints * 3;
 
@@ -63,22 +63,28 @@ SegmentSAResult<NWaypoints> runSegmentSA(
         return (std::isinf(cost) || std::isnan(cost)) ? 1e12 : cost;
     };
 
-    point_nd<Dim> domCenter = 0.0;
+    point_nd<Dim> domRef   = 0.0;
+    point_nd<Dim> domSides = 0.0;
     for (int w = 0; w < NWaypoints; ++w) {
-        domCenter[w*3+0] = (cxMin + cxMax) / 2.0;
-        domCenter[w*3+1] = (cyMin + cyMax) / 2.0;
-        domCenter[w*3+2] = (zMin  + zMax)  / 2.0;
+        domRef[w*3+0]   = cxMin; domSides[w*3+0] = cxMax - cxMin;
+        domRef[w*3+1]   = cyMin; domSides[w*3+1] = cyMax - cyMin;
+        domRef[w*3+2]   = zMin;  domSides[w*3+2] = zMax  - zMin;
     }
-    double domRadius = std::sqrt(NWaypoints) *
-                       std::sqrt(std::pow(cxMax - cxMin, 2) +
-                                 std::pow(cyMax - cyMin, 2) +
-                                 std::pow(zMax  - zMin,  2));
+    // Step radius: use only the x/y diagonal to avoid the scale mismatch
+    // between the large geographic extent (km) and the narrow z range (150 m).
+    // Dividing by sqrt(Dim) keeps the per-dimension perturbation proportional
+    // to each coordinate's own range instead of the full hypersphere radius.
+    double xyDiag     = std::sqrt(std::pow(cxMax - cxMin, 2) +
+                                   std::pow(cyMax - cyMin, 2));
+    double stepRadius = 0.1 * xyDiag / std::sqrt(static_cast<double>(Dim));
 
-    auto domain    = RnDomainFactory::make_sphere(domRadius, domCenter);
-    auto saNeigh   = std::make_shared<CircleNeighbourhood<Dim>>(domain, domRadius * 0.1);
+    auto domain    = RnDomainFactory::make_hyperrectangle(domSides, domRef);
+    auto saNeigh   = std::make_shared<CircleNeighbourhood<Dim>>(domain, stepRadius);
     auto saSampler = std::make_shared<LocalSamplerFixed<CircleNeighbourhood<Dim>>>(0.1);
     auto saCrit    = std::make_shared<MetropolisCriterion>();
-    auto saSched   = std::make_shared<ExponentialScheduler>(100.0, 0.01, 1, 0.95);
+    // stab_it=15, maxIter=5000 → 75,000 evaluations, matching DRSTASA budget
+    // (popSize=30 × 5 operators × maxIter=500 ≈ 75,000).
+    auto saSched   = std::make_shared<ExponentialScheduler>(100.0, 0.01, 15, 0.95);
     saNeigh->from(startPoint, startPoint);
 
     AnnealingExecutionPolicy<LocalSamplerFixed<CircleNeighbourhood<Dim>>> saPolicy(
@@ -159,27 +165,28 @@ SegmentResult optimizeSegment(
     Lhs lhs(bounds.xMin, bounds.xMax, bounds.yMin, bounds.yMax, zMin, zMax, NWaypoints, -1);
     point_nd<Dim> startPoint = lhs.toPointNd<NWaypoints>();
 
-    point_nd<Dim> domCenter = 0.0;
+    point_nd<Dim> domRef   = 0.0;
+    point_nd<Dim> domSides = 0.0;
     for (int w = 0; w < NWaypoints; ++w) {
-        domCenter[w*3+0] = (bounds.xMin + bounds.xMax) / 2.0;
-        domCenter[w*3+1] = (bounds.yMin + bounds.yMax) / 2.0;
-        domCenter[w*3+2] = (zMin + zMax) / 2.0;
+        domRef[w*3+0]   = bounds.xMin; domSides[w*3+0] = bounds.xMax - bounds.xMin;
+        domRef[w*3+1]   = bounds.yMin; domSides[w*3+1] = bounds.yMax - bounds.yMin;
+        domRef[w*3+2]   = zMin;        domSides[w*3+2] = zMax        - zMin;
     }
-    double domRadius = std::sqrt(NWaypoints) *
-                       std::sqrt(std::pow(bounds.xMax - bounds.xMin, 2) +
-                                 std::pow(bounds.yMax - bounds.yMin, 2) +
-                                 std::pow(zMax - zMin, 2));
+    double xyDiag2    = std::sqrt(std::pow(bounds.xMax - bounds.xMin, 2) +
+                                   std::pow(bounds.yMax - bounds.yMin, 2));
+    double stepRadius = 0.1 * xyDiag2 / std::sqrt(static_cast<double>(Dim));
 
-    auto domain    = RnDomainFactory::make_sphere(domRadius, domCenter);
-    auto saNeigh   = std::make_shared<CircleNeighbourhood<Dim>>(domain, domRadius * 0.1);
+    auto domain    = RnDomainFactory::make_hyperrectangle(domSides, domRef);
+    auto saNeigh   = std::make_shared<CircleNeighbourhood<Dim>>(domain, stepRadius);
     auto saSampler = std::make_shared<LocalSamplerFixed<CircleNeighbourhood<Dim>>>(0.1);
     auto saCrit    = std::make_shared<MetropolisCriterion>();
-    auto saSched   = std::make_shared<ExponentialScheduler>(100.0, 0.01, 1, 0.95);
+    // stab_it=15, maxIter=5000 → 75,000 evaluations, matching DRSTASA budget.
+    auto saSched   = std::make_shared<ExponentialScheduler>(100.0, 0.01, 15, 0.95);
     saNeigh->from(startPoint, startPoint);
 
     AnnealingExecutionPolicy<LocalSamplerFixed<CircleNeighbourhood<Dim>>> saPolicy(
         saCrit, saSampler, saSched, StoppingCriterion::temp_zero, *saNeigh);
-    SerialSimulatedAnnealing ssa(6000);
+    SerialSimulatedAnnealing ssa(5000);
     auto saResult = ssa.run(segObjective, startPoint, saPolicy);
 
     SegmentResult res;

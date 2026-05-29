@@ -1,17 +1,20 @@
-#include "scenarios/iceland.hpp"
+#include "structures/functions/fitnessUtilities.hpp"
+#include "structures/obstacles/cylinderObstacle.hpp"
+#include "structures/geo/geoUtils.hpp"
 #include "structures/pipeline/pipelineRunner.hpp"
 #include "structures/kmeans.hpp"
 #include "exporters/pointsListReader.hpp"
 #include "exporters/pointsListExporter.hpp"
 #include <iostream>
+#include <cmath>
 
 int main()
 {
-    constexpr int NWaypoints = 2;
+    constexpr int NWaypoints = 4;
     constexpr int K          = 4;
-    const double  zMin = 60.0, zMax = 200.0;
+    const double  zMin = 800.0, zMax = 950.0;
 
-    const GeoOrigin origin = icelandOrigin();
+    const GeoOrigin origin = {63.985, -22.605};
 
     // ── 1. Caricamento CSV ────────────────────────────────────────────────────
     std::cout << "[1/5] Caricamento input_iceland.csv ... " << std::flush;
@@ -24,9 +27,24 @@ int main()
     std::cout << allPoints.size() << " punti caricati e convertiti in metri.\n";
 
     // ── 2. Fitness ────────────────────────────────────────────────────────────
-    std::cout << "[2/5] Costruzione fitness (4 ostacoli vulcanici) ... " << std::flush;
-    FitnessFunction fitness = makeIcelandFitness(zMin, zMax);
+    std::cout << "[2/5] Costruzione fitness ... " << std::flush;
+    FitnessFunction fitness = makeDefaultFitness(zMin, zMax);
     std::cout << "OK.\n";
+
+    // Pre-convert obstacles to GPS circles for the comparison KML
+    const double kMPDLat = 111320.0;
+    const double kMPDLon = kMPDLat * std::cos(origin.lat0 * M_PI / 180.0);
+    std::vector<PointsListExporter::ObstacleCircle> obsCircles;
+    for (const auto& obs : fitness.getObstacles()) {
+        const auto* cyl = dynamic_cast<const CylinderObstacle*>(obs.get());
+        if (!cyl) continue;
+        PointsListExporter::ObstacleCircle oc;
+        oc.centerLon    = origin.lon0 + cyl->getX() / kMPDLon;
+        oc.centerLat    = origin.lat0 + cyl->getY() / kMPDLat;
+        oc.radiusDegLon = cyl->getRadius() / kMPDLon;
+        oc.radiusDegLat = cyl->getRadius() / kMPDLat;
+        obsCircles.push_back(oc);
+    }
 
     // ── 3. K-Means clustering ─────────────────────────────────────────────────
     std::cout << "[3/5] K-Means clustering (K=" << K << ") ... " << std::flush;
@@ -36,7 +54,7 @@ int main()
     // ── 4. Ottimizzazione seriale ─────────────────────────────────────────────
     std::cout << "[4/5] Ottimizzazione SA + DRSTASA (seriale, NWaypoints=" << NWaypoints << ") ...\n";
     BenchmarkResult res = runPipelineOptimization<NWaypoints>(
-        allPoints, K, fitness, zMin, zMax, /*numThreads=*/1);
+        allPoints, K, fitness, zMin, zMax, /*numThreads=*/K);
     std::cout << "      Completata in " << res.wallTime << "s.\n";
     std::cout << "      Fitness SA:      " << res.saFit      << "\n";
     std::cout << "      Fitness DRSTASA: " << res.drstasaFit << "\n";
@@ -58,15 +76,23 @@ int main()
     for (auto& cl : clustersGPS) GeoUtils::toGPS(cl, origin);
     PointsListExporter::writeKMLClusters(clustersGPS, "../output/iceland_clusters.kml");
 
-    // Percorsi SA per-cluster
+    // Percorsi SA per-cluster: linea + label solo sui target point originali
     std::vector<PointsList> saClustersGPS = res.saPerCluster;
     for (auto& cl : saClustersGPS) GeoUtils::toGPS(cl, origin);
-    PointsListExporter::writeKMLClusters(saClustersGPS, "../output/iceland_sa_clusters.kml");
+    PointsListExporter::writeKMLClustersWithTargets(saClustersGPS, clustersGPS, "../output/iceland_sa_clusters.kml");
 
-    // Percorsi DRSTASA per-cluster
+    // Percorsi DRSTASA per-cluster: linea + label solo sui target point originali
     std::vector<PointsList> drstasaClustersGPS = res.drstasaPerCluster;
     for (auto& cl : drstasaClustersGPS) GeoUtils::toGPS(cl, origin);
-    PointsListExporter::writeKMLClusters(drstasaClustersGPS, "../output/iceland_drstasa_clusters.kml");
+    PointsListExporter::writeKMLClustersWithTargets(drstasaClustersGPS, clustersGPS, "../output/iceland_drstasa_clusters.kml");
+
+    PointsListExporter::writeCSVClusters(
+        clustersGPS, saClustersGPS, drstasaClustersGPS,
+        "../output/iceland_clusters.csv");
+
+    PointsListExporter::writeKMLComparison(
+        saClustersGPS, drstasaClustersGPS, clustersGPS,
+        obsCircles, "../output/iceland_comparison.kml");
 
     std::cout << "OK.\n";
     std::cout << "      -> ../output/iceland_sa.kml\n";
@@ -74,6 +100,8 @@ int main()
     std::cout << "      -> ../output/iceland_clusters.kml\n";
     std::cout << "      -> ../output/iceland_sa_clusters.kml\n";
     std::cout << "      -> ../output/iceland_drstasa_clusters.kml\n";
+    std::cout << "      -> ../output/iceland_clusters.csv\n";
+    std::cout << "      -> ../output/iceland_comparison.kml\n";
 
     return 0;
 }

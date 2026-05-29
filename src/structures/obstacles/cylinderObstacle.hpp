@@ -13,6 +13,12 @@ public:
     // c: center point, r: collision radius, h: obstacle height, b: buffer zone thickness.
     CylinderObstacle(Point c, double r, double h, double b);
 
+    double getX()      const { return center.getX(); }
+    double getY()      const { return center.getY(); }
+    double getRadius() const { return radius; }
+    double getHeight() const { return height; }
+    double getBuffer() const { return buffer; }
+
     // Returns the horizontal distance from the drone to the cylinder center.
     // Returns 0 if the drone is above the obstacle height.
     double distance(Drone* drone) const;
