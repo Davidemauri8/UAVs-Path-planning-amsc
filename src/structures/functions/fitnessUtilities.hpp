@@ -11,8 +11,14 @@
 // Returns a FitnessWeights struct with default tuning values for the given altitude band.
 FitnessWeights sampleFitnessWeights(double zMin, double zMax);
 
-// Returns a FitnessFunction with obstacles for the main pipeline.
+// Returns all default obstacles as a vector (used by benchmark to vary obstacle count).
+std::vector<std::shared_ptr<Obstacle>> buildDefaultObstacles();
+
+// Returns a FitnessFunction with all default obstacles.
 FitnessFunction makeDefaultFitness(double zMin, double zMax);
+
+// Returns a FitnessFunction with only the first nObstacles obstacles.
+FitnessFunction makeDefaultFitness(double zMin, double zMax, int nObstacles);
 
 // Builds a DRSTASA::Config tuned for the given number of intermediate waypoints.
 DRSTASA::Config GetConfigurationDRST(int NWaypoints);

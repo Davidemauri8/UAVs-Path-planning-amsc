@@ -57,14 +57,16 @@ int main()
 
         f << "  <Placemark>\n"
           << "    <styleUrl>#noFly</styleUrl>\n"
-          << "    <Polygon><tessellate>1</tessellate>\n"
+          << "    <Polygon>\n"
+          << "      <extrude>1</extrude>\n"
+          << "      <altitudeMode>absolute</altitudeMode>\n"
           << "      <outerBoundaryIs><LinearRing><coordinates>\n";
 
         for (int i = 0; i <= N; ++i) {
             double theta = 2.0 * M_PI * i / N;
             double pLon  = lon0 + (cx + r * std::cos(theta)) / mpl;
             double pLat  = lat0 + (cy + r * std::sin(theta)) / kMPDLat;
-            f << "        " << pLon << "," << pLat << ",0\n";
+            f << "        " << pLon << "," << pLat << "," << h << "\n";
         }
 
         f << "      </coordinates></LinearRing></outerBoundaryIs>\n"

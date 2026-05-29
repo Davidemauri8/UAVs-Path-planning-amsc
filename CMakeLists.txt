@@ -57,6 +57,12 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(testobstacles PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
+# --- TARGET: TESTBENCHMARK ---
+add_executable(testbenchmark src/testbenchmark.cpp ${COMMON_SOURCES})
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(testbenchmark PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 # --- TARGET ALTRI (Esempio test11, 12 se necessari) ---
 #add_executable(test11 src/test11.cpp ${COMMON_SOURCES})
 #add_executable(test12 src/test12.cpp ${COMMON_SOURCES})
