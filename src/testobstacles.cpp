@@ -9,6 +9,8 @@
 static constexpr double kMPDLat = 111320.0;
 static double mpdLon(double lat0) { return 111320.0 * std::cos(lat0 * M_PI / 180.0); }
 
+//plot all the obstacles in a KML file
+
 int main()
 {
     const GeoOrigin origin = {63.985, -22.605};
@@ -22,7 +24,7 @@ int main()
     const char* outfile = "../output/iceland_obstacles.kml";
     std::ofstream f(outfile);
     if (!f.is_open()) {
-        std::cerr << "Impossibile aprire: " << outfile << "\n";
+        std::cerr << "impossible to open: " << outfile << "\n";
         return 1;
     }
     f << std::fixed << std::setprecision(7);
@@ -77,6 +79,6 @@ int main()
     }
 
     f << "</Document>\n</kml>\n";
-    std::cout << "Scritto: " << outfile << " (" << idx << " ostacoli)\n";
+    std::cout << "Write: " << outfile << " (" << idx << " Obstacles)\n";
     return 0;
 }

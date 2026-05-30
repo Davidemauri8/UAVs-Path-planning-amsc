@@ -4,7 +4,7 @@
 #include "segmentOptimizer.hpp"
 
 // Appends segStart followed by the NWaypoints intermediate waypoints from a
-// classic SA result to path. The segment end-point is NOT appended here;
+// classic SA result to path
 // the caller is responsible for adding it when processing the next segment
 template<int NWaypoints>
 inline void appendSASegment(PointsList& path,

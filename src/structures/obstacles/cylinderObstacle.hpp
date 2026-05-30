@@ -4,13 +4,13 @@
 #include "obstacle.hpp"
 
 class CylinderObstacle: public Obstacle{
-    Point center; // z of the center must be zero 
+    Point center;   // z of the center must be zero 
     double radius;
     double height;
-    double buffer; // soft penalty zone thickness outside the hard radius
+    double buffer;  // soft penalty zone thickness outside the hard radius
 
 public:
-    // c: center point, r: collision radius, h: obstacle height, b: buffer zone thickness.
+
     CylinderObstacle(Point c, double r, double h, double b);
 
     double getX()      const { return center.getX(); }
@@ -19,11 +19,10 @@ public:
     double getHeight() const { return height; }
     double getBuffer() const { return buffer; }
 
-    // Returns the horizontal distance from the drone to the cylinder center.
-    // Returns 0 if the drone is above the obstacle height.
+    // Returns the horizontal distance from the drone to the cylinder center
     double distance(Drone* drone) const;
 
-    // Computes the penalty cost for segment AB, inflating the collision radius by droneRadius.
+    // Computes the penalty cost for segment AB, inflating the collision radius by droneRadius
     double segmentCost(const Point& A, const Point& B, double droneRadius = 0.0) const override;
 };
 

@@ -21,7 +21,7 @@
 #include <memory>
 #include <omp.h>
 
-// Axis-aligned bounding box for a cluster, with an optional safety margin
+// Axis-aligned bounding box for a cluster
 struct SegmentBounds { double xMin, xMax, yMin, yMax; };
 
 // Computes the XY bounding box of ordered waypoints and expands it by a margin
@@ -48,6 +48,7 @@ SegmentSAResult<NWaypoints> runSegmentSA(
     double zMin,  double zMax,
     long   maxIter = 5000)
 {
+    // define the dimension
     constexpr int Dim = NWaypoints * 3;
 
     Lhs lhs(cxMin, cxMax, cyMin, cyMax, zMin, zMax, NWaypoints, -1);
@@ -71,9 +72,6 @@ SegmentSAResult<NWaypoints> runSegmentSA(
         domRef[w*3+2]   = zMin;  domSides[w*3+2] = zMax  - zMin;
     }
     // Step radius: use only the x/y diagonal to avoid the scale mismatch
-    // between the large geographic extent (km) and the narrow z range (150 m).
-    // Dividing by sqrt(Dim) keeps the per-dimension perturbation proportional
-    // to each coordinate's own range instead of the full hypersphere radius.
     double xyDiag     = std::sqrt(std::pow(cxMax - cxMin, 2) +
                                    std::pow(cyMax - cyMin, 2));
     double stepRadius = 0.1 * xyDiag / std::sqrt(static_cast<double>(Dim));
@@ -82,8 +80,7 @@ SegmentSAResult<NWaypoints> runSegmentSA(
     auto saNeigh   = std::make_shared<CircleNeighbourhood<Dim>>(domain, stepRadius);
     auto saSampler = std::make_shared<LocalSamplerFixed<CircleNeighbourhood<Dim>>>(0.1);
     auto saCrit    = std::make_shared<MetropolisCriterion>();
-    // stab_it=15, maxIter=5000 → 75,000 evaluations, matching DRSTASA budget
-    // (popSize=30 × 5 operators × maxIter=500 ≈ 75,000).
+
     auto saSched   = std::make_shared<ExponentialScheduler>(100.0, 0.01, 15, 0.95);
     saNeigh->from(startPoint, startPoint);
 
@@ -180,7 +177,7 @@ SegmentResult optimizeSegment(
     auto saNeigh   = std::make_shared<CircleNeighbourhood<Dim>>(domain, stepRadius);
     auto saSampler = std::make_shared<LocalSamplerFixed<CircleNeighbourhood<Dim>>>(0.1);
     auto saCrit    = std::make_shared<MetropolisCriterion>();
-    // stab_it=15, maxIter=5000 → 75,000 evaluations, matching DRSTASA budget.
+
     auto saSched   = std::make_shared<ExponentialScheduler>(100.0, 0.01, 15, 0.95);
     saNeigh->from(startPoint, startPoint);
 
@@ -200,7 +197,7 @@ SegmentResult optimizeSegment(
     PointsList drstasaSeg = drstasa.run(segStart, segEnd);
     res.drstasaFit = drstasa.lastBestFit();
 
-    // drstasaSeg contains start+waypoints+end; exclude the end-point.
+    // drstasaSeg contains start, waypoints, end
     for (int w = 0; w < drstasaSeg.size() - 1; ++w)
         res.drstasaPath.addPoint(Point(drstasaSeg.getX(w), drstasaSeg.getY(w),
                                       drstasaSeg.getZ(w), -1));

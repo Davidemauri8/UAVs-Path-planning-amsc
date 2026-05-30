@@ -3,8 +3,7 @@
 
 #include "point.hpp"
 
-// Represents a UAV with a current 3D position and a physical footprint radius.
-// The radius is used by obstacle classes to inflate collision boundaries (Minkowski sum).
+// Represents a UAV with a current 3D position and a physical footprint radius
 class Drone{
     Point position;
     double radius;

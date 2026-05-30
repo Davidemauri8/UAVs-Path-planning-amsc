@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 
+// read a PointList
 PointsList PointsListReader::readCSV(const std::string& filename) {
     std::ifstream file(filename);
     PointsList points;
@@ -20,15 +21,15 @@ PointsList PointsListReader::readCSV(const std::string& filename) {
 
         double x, y, z;
 
-        // Legge X
+        // read X
         if (!std::getline(ss, token, ',')) continue;
         x = std::stod(token);
 
-        // Legge Y
+        // read Y
         if (!std::getline(ss, token, ',')) continue;
         y = std::stod(token);
 
-        // Legge Z
+        // read Z
         if (!std::getline(ss, token, ',')) continue;
         z = std::stod(token);
 

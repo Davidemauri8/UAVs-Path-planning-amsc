@@ -1,16 +1,3 @@
-#!/usr/bin/env python3
-"""
-Generate benchmark plots for the project report.
-
-Usage (from any directory):
-    python scripts/plot_results.py
-
-Reads:   output/bench_parallel.csv
-         output/bench_obstacles.csv
-Writes:  output/plot_parallel.png
-         output/plot_obstacles.png
-"""
-
 import os
 import numpy as np
 import pandas as pd
@@ -28,8 +15,7 @@ plt.rcParams.update({
     'axes.spines.right': False,
 })
 
-# ── Plot 1: Execution time vs number of threads ───────────────────────────
-
+# Plot 1: Execution time vs number of threads
 df_par = pd.read_csv(os.path.join(OUT_DIR, 'bench_parallel.csv'))
 g      = df_par.groupby('threads')['wall_time']
 mean_t = g.mean()
@@ -62,8 +48,7 @@ fig.savefig(out1, dpi=150, bbox_inches='tight')
 plt.close(fig)
 print(f'Saved {out1}')
 
-# ── Plot 2: Fitness vs N obstacles ────────────────────────────────────────
-
+# Plot 2: Fitness vs N obstacles
 df_obs  = pd.read_csv(os.path.join(OUT_DIR, 'bench_obstacles.csv'))
 g_sa    = df_obs.groupby('n_obstacles')['sa_fit']
 g_dr    = df_obs.groupby('n_obstacles')['drstasa_fit']

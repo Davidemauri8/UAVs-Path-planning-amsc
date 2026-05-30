@@ -5,15 +5,13 @@
 #include <sstream>
 #include <cmath>
 
-// ─── Palette colori per cluster (KML AABBGGRR) ───────────────────────────────
-
 static const char* CLUSTER_COLORS[] = {
-    "ffff0000",   // C0 — blu
-    "ff00cc00",   // C1 — verde
-    "ff00ffff",   // C2 — giallo
-    "ff0088ff",   // C3 — arancio
-    "ffff0088",   // C4 — viola
-    "ff00ccff",   // C5 — oro
+    "ffff0000",   // blue
+    "ff00cc00",   // green
+    "ff00ffff",   // Yellow
+    "ff0088ff",   // orange
+    "ffff0088",   // purple
+    "ff00ccff",   // gold
 };
 static const char* CLUSTER_NAMES[] = {
     "Cluster 0", "Cluster 1", "Cluster 2",
@@ -21,8 +19,7 @@ static const char* CLUSTER_NAMES[] = {
 };
 static constexpr int N_COLORS = 6;
 
-// ─── printComparison ─────────────────────────────────────────────────────────
-
+// Comparison
 void PointsListExporter::printComparison(double totalSAFit, double totalDRSTASAFit) {
     std::cout << "\n=== CONFRONTO FINALE ===" << std::endl;
     std::cout << "Fitness totale SA:      " << totalSAFit      << std::endl;
@@ -35,8 +32,7 @@ void PointsListExporter::printComparison(double totalSAFit, double totalDRSTASAF
         std::cout << ">> SA migliore (o equivalente) di DRSTASA" << std::endl;
 }
 
-// ─── writeCSVClusters ────────────────────────────────────────────────────────
-
+// writeCSVClusters 
 void PointsListExporter::writeCSVClusters(const std::vector<PointsList>& targets,
                                           const std::vector<PointsList>& saWaypoints,
                                           const std::vector<PointsList>& drstasaWaypoints,
@@ -71,14 +67,9 @@ void PointsListExporter::writeCSVClusters(const std::vector<PointsList>& targets
         }
     }
     f.close();
-    std::cout << "CSV cluster scritto: " << filename << " (" << K << " cluster)\n";
 }
 
-// ─── writeKMLClustersWithTargets ─────────────────────────────────────────────
-// Exports optimised paths (SA or DRSTASA) with:
-//   - a coloured LineString for each cluster (no icons on intermediate waypoints)
-//   - text-only labels at the original target-point positions (from `targets`)
-
+// writeKMLClustersWithTargets 
 void PointsListExporter::writeKMLClustersWithTargets(
     const std::vector<PointsList>& paths,
     const std::vector<PointsList>& targets,
@@ -99,7 +90,7 @@ void PointsListExporter::writeKMLClustersWithTargets(
     file << "  <name>Percorsi Droni — Multi-Cluster</name>\n";
     file << "  <open>1</open>\n\n";
 
-    // One line style per cluster; one label-only style per cluster (no icon).
+    // One line style per cluster; one label-only style per cluster
     for (int c = 0; c < nClusters; ++c) {
         const char* col = CLUSTER_COLORS[c % N_COLORS];
 
@@ -128,7 +119,7 @@ void PointsListExporter::writeKMLClustersWithTargets(
         file << "    <name>" << name << "</name>\n";
         file << "    <open>0</open>\n\n";
 
-        // Path line — passes through all points (target + intermediate waypoints).
+        // Path line — passes through all points 
         file << "    <Placemark>\n";
         file << "      <name>" << name << " — percorso</name>\n";
         file << "      <styleUrl>#line" << c << "</styleUrl>\n";
@@ -169,12 +160,9 @@ void PointsListExporter::writeKMLClustersWithTargets(
     file << "</kml>\n";
     file.close();
 
-    std::cout << "KML cluster (with targets) scritto: " << filename
-              << " (" << nClusters << " cluster)" << std::endl;
 }
 
-// ─── writeKML (singolo percorso, comportamento originale) ────────────────────
-
+// writeKML
 void PointsListExporter::writeKML(const PointsList& points,
                                   const std::string& filename) {
     std::ofstream file(filename);
@@ -234,8 +222,7 @@ void PointsListExporter::writeKML(const PointsList& points,
     file.close();
 }
 
-// ─── writeKMLClusters ────────────────────────────────────────────────────────
-
+// writeKMLClusters 
 void PointsListExporter::writeKMLClusters(const std::vector<PointsList>& clusters,
                                           const std::string& filename) {
     std::ofstream file(filename);
@@ -253,7 +240,7 @@ void PointsListExporter::writeKMLClusters(const std::vector<PointsList>& cluster
     file << "  <name>Percorsi Droni — Multi-Cluster</name>\n";
     file << "  <open>1</open>\n\n";
 
-    // Stili per ogni cluster
+    // style for each cluster
     for (int c = 0; c < nClusters; ++c) {
         const char* col = CLUSTER_COLORS[c % N_COLORS];
 
@@ -271,7 +258,7 @@ void PointsListExporter::writeKMLClusters(const std::vector<PointsList>& cluster
         file << "  </Style>\n\n";
     }
 
-    // Una folder per cluster
+    // folder for each cluster
     for (int c = 0; c < nClusters; ++c) {
         const PointsList& cl = clusters[c];
         if (cl.size() == 0) continue;
@@ -283,7 +270,7 @@ void PointsListExporter::writeKMLClusters(const std::vector<PointsList>& cluster
         file << "    <name>" << name << " (" << cl.size() << " waypoint)</name>\n";
         file << "    <open>0</open>\n\n";
 
-        // Linea percorso
+        // line path
         file << "    <Placemark>\n";
         file << "      <name>" << name << " — traiettoria</name>\n";
         file << "      <styleUrl>#line" << c << "</styleUrl>\n";
@@ -299,7 +286,7 @@ void PointsListExporter::writeKMLClusters(const std::vector<PointsList>& cluster
         file << "      </LineString>\n";
         file << "    </Placemark>\n\n";
 
-        // Pin numerati
+        // numbered pin
         for (int i = 0; i < cl.size(); ++i) {
             file << "    <Placemark>\n";
             file << "      <name>C" << c << "-W" << (i + 1) << "</name>\n";
@@ -327,15 +314,11 @@ void PointsListExporter::writeKMLClusters(const std::vector<PointsList>& cluster
     file << "</kml>\n";
     file.close();
 
-    std::cout << "KML multi-cluster scritto: " << filename
-              << " (" << nClusters << " cluster)" << std::endl;
+    //std::cout << "KML multi-cluster scritto: " << filename
+    //          << " (" << nClusters << " cluster)" << std::endl;
 }
 
-// ─── writeKMLComparison ───────────────────────────────────────────────────────
-// SA (dashed, 60% opacity) + DRSTASA (solid) per cluster + obstacle circles.
-// Dashing is approximated by emitting every other segment as a separate
-// LineString (segments 0→1, 2→3, … drawn; 1→2, 3→4, … omitted).
-
+// writeKMLComparison 
 void PointsListExporter::writeKMLComparison(
     const std::vector<PointsList>& saPaths,
     const std::vector<PointsList>& drstasaPaths,
@@ -368,7 +351,7 @@ void PointsListExporter::writeKMLComparison(
     // Per-cluster styles
     for (int c = 0; c < nClusters; ++c) {
         const char* col = CLUSTER_COLORS[c % N_COLORS];
-        // 60% opacity version of the cluster color for SA dashes (replace "ff" prefix with "99")
+
         std::string colSA = std::string("99") + std::string(col + 2);
 
         file << "  <Style id=\"drstasa_line" << c << "\">\n";
@@ -438,7 +421,7 @@ void PointsListExporter::writeKMLComparison(
             file << "    </Placemark>\n\n";
         }
 
-        // SA — dashed (emit only even-indexed segments: 0→1, 2→3, 4→5, …)
+        // SA
         if (c < static_cast<int>(saPaths.size()) && saPaths[c].size() > 0) {
             const PointsList& sp = saPaths[c];
             const int n = sp.size();
@@ -458,7 +441,7 @@ void PointsListExporter::writeKMLComparison(
             file << "\n";
         }
 
-        // Target point labels (white dot + cluster-coloured text)
+        // Target point labels 
         if (c < static_cast<int>(targets.size())) {
             const PointsList& tgt = targets[c];
             for (int i = 0; i < tgt.size(); ++i) {
@@ -482,6 +465,6 @@ void PointsListExporter::writeKMLComparison(
     file << "</kml>\n";
     file.close();
 
-    std::cout << "KML comparison scritto: " << filename
-              << " (" << nClusters << " cluster)" << std::endl;
+    //std::cout << "KML comparison scritto: " << filename
+    //          << " (" << nClusters << " cluster)" << std::endl;
 }

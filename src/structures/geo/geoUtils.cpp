@@ -4,7 +4,7 @@
 namespace GeoUtils {
 
 namespace {
-    // Metres per degree of latitude (constant)
+    // Metres per degree of latitude 
     constexpr double kMetersPerDegLat = 111320.0;
 
     // Metres per degree of longitude varies with latitude 
@@ -13,7 +13,8 @@ namespace {
     }
 }
 
-// Shifts each point so that maps to the metric origin, then scales degrees to metres using the local conversion factors.
+// Shifts each point so that maps to the metric origin, 
+//then scales degrees to metres using the local conversion factors
 void toMeters(PointsList& points, double lat0, double lon0) {
     const double mpdLon = metersPerDegLon(lat0);
     for (int i = 0; i < points.size(); ++i) {

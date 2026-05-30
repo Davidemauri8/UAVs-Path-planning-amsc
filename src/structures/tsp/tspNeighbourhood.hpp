@@ -4,7 +4,7 @@
 #include "../pointsList.hpp"
 #include <random>
 
-// Neighbourhood operator for TSP-style ordering of waypoints.
+// Neighbourhood operator for TSP-style ordering of waypoints
 class TspNeighbourhood {
 public:
     using PointType = PointsList;
@@ -17,14 +17,13 @@ public:
     TspNeighbourhood(const PointsList& path)
         : current(path), prev(path) {}
 
-    // Updates the neighbourhood centre to a new current solution.
+    // Updates the neighbourhood centre to a new current solution
     void from(const PointsList& p, const PointsList& c) {
         prev    = p;
         current = c;
     }
 
-    // Generates a neighbour by applying a random 2-opt swap:
-    // two indices i < j are chosen and the sub-sequence between them is reversed.
+    // Generates a neighbour 
     PointsList generateNext() const {
         PointsList next = current;
         int size = next.size();

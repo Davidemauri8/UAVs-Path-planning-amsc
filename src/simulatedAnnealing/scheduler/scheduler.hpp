@@ -75,7 +75,7 @@ public:
 
 // Geometric/Exponential Cooling Schedule: T(k+1) = alpha * T(k)
 // Temperature is multiplied by factor alpha < 1 at each step
-// Example: T0=100, alpha=0.95 → 100, 95, 90.25, 85.74, ...
+
 class ExponentialScheduler : public ParamScheduler {
 private:
    double current_temp;

@@ -16,8 +16,7 @@ DRSTASA::DRSTASA(const FitnessFunction& fitness, const Config& cfg, unsigned see
       reverseLearn_(cfg.xMin, cfg.xMax, cfg.yMin, cfg.yMax, cfg.zMin, cfg.zMax,
                     seed + 1) {}
 
-// Assembles the full path and evaluates it; caps non-finite values at 1e12
-// so the Metropolis criterion always receives a finite delta.
+// Assembles the full path and evaluates it
 double DRSTASA::evalWaypoints(const PointsList& waypoints,
                                const Point& start, const Point& end) const {
     PointsList fullPath;
@@ -35,7 +34,7 @@ double DRSTASA::evalWaypoints(const PointsList& waypoints,
 PointsList DRSTASA::run(const Point& start, const Point& end) {
     int popSize = cfg_.popSize;
 
-    // Initialise the population with Latin Hypercube Sampling.
+    // Initialise the population with Latin Hypercube Sampling
     std::vector<PointsList> pop;
     pop.reserve(popSize);
     for (int i = 0; i < popSize; ++i) {
@@ -45,7 +44,7 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
     }
     std::vector<PointsList> prevPop = pop;
 
-    // Initial fitness evaluation.
+    // Initial fitness evaluation
     std::vector<double> fitVals(popSize);
     for (int i = 0; i < popSize; ++i)
         fitVals[i] = evalWaypoints(pop[i], start, end);
@@ -66,7 +65,7 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
     for (int iter = 0; iter < cfg_.maxIter; ++iter) {
 
         // Apply all four STASA operators to each individual,
-        // keep the best candidate, and accept via Metropolis criterion.
+        // keep the best candidate, and accept via Metropolis criterion
         for (int i = 0; i < popSize; ++i) {
             neighbourhood_.from(prevPop[i], pop[i]);
             std::array<PointsList, 4> candidates = neighbourhood_.generateAll();
@@ -91,7 +90,7 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
         }
 
         // Disruption operator perturbs each individual
-        // using the global best and a random neighbour to maintain diversity.
+        // using the global best and a random neighbour to maintain diversity
         for (int i = 0; i < popSize; ++i) {
             int j = neighborDist(rng_);
             if (j >= i) ++j;
@@ -103,13 +102,13 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
             }
         }
 
-        // Reverse learning is applied with probability (1 - p).
+        // Reverse learning is applied
         if (uni(rng_) > cfg_.p)
             reverseLearn_.apply(pop, fitVals,
                 [&](const PointsList& wp) { return evalWaypoints(wp, start, end); },
                 cfg_.nWaypoints);
 
-        // Update global best after all operators.
+        // Update global best after all operators
         for (int i = 0; i < popSize; ++i) {
             if (fitVals[i] < bestFit_) {
                 bestFit_ = fitVals[i];

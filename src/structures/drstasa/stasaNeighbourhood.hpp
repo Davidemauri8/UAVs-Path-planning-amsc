@@ -7,11 +7,6 @@
 #include <vector>
 
 // Runtime-sized implementation of the four STASA neighbourhood operators
-// applied to a PointsList (path of intermediate waypoints).
-// Mirrors the interface of STASANeighbourhood<Dim> from the SA library:
-//   from(prev, curr)  — updates the neighbourhood centre
-//   generateNext()    — picks one operator at random and returns a candidate
-//   generateAll()     — evaluates all four operators and returns the results
 class STASANeighbourhoodDyn {
 public:
     STASANeighbourhoodDyn(
@@ -35,7 +30,7 @@ private:
     PointsList applyScaling();     // global multiplicative Gaussian perturbation
     PointsList applyAxisTransf();  // single-coordinate Gaussian perturbation
 
-    // Helpers: flatten PointsList to a flat double vector and back.
+    // Helpers: flatten PointsList to a flat double vector and back
     std::vector<double> flatten  (const PointsList& path) const;
     PointsList          unflatten(const std::vector<double>& v) const;
 

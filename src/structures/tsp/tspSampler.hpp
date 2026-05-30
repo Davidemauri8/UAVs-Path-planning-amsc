@@ -12,7 +12,7 @@ public:
         return n.generateNext();
     }
 
-    // Seeding is handled internally by TspNeighbourhood's own RNG
+    // Seeding is handled internally 
     void seed(long s) {}
 };
 

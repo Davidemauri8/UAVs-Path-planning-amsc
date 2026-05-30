@@ -9,8 +9,7 @@ STASANeighbourhoodDyn::STASANeighbourhoodDyn(
       xMin_(xMin), xMax_(xMax), yMin_(yMin), yMax_(yMax), zMin_(zMin), zMax_(zMax),
       rng_(seed) {}
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
+// Helpers
 std::vector<double> STASANeighbourhoodDyn::flatten(const PointsList& path) const {
     int N = path.size();
     std::vector<double> v(N * 3);
@@ -42,8 +41,7 @@ PointsList STASANeighbourhoodDyn::clampToBounds(const PointsList& path) const {
     return result;
 }
 
-// ─── Public interface ─────────────────────────────────────────────────────────
-
+// Public interface 
 void STASANeighbourhoodDyn::from(const PointsList& prev, const PointsList& curr) {
     x_prev_ = prev;
     x_k_    = curr;
@@ -63,9 +61,9 @@ std::array<PointsList, 4> STASANeighbourhoodDyn::generateAll() {
     return { applyRotation(), applyTranslation(), applyScaling(), applyAxisTransf() };
 }
 
-// ─── Four STASA operators ─────────────────────────────────────────────────────
+// Four STASA operators
 
-// Eq. (10): explores a hypersphere centred on the current point.
+// explores a hypersphere centred on the current point
 PointsList STASANeighbourhoodDyn::applyRotation() {
     std::vector<double> x = flatten(x_k_);
     int D = static_cast<int>(x.size());
@@ -84,7 +82,7 @@ PointsList STASANeighbourhoodDyn::applyRotation() {
     return clampToBounds(unflatten(result));
 }
 
-// Eq. (11): local search along the direction of the previous step.
+// local search along the direction of the previous step
 PointsList STASANeighbourhoodDyn::applyTranslation() {
     std::vector<double> x    = flatten(x_k_);
     std::vector<double> xPre = flatten(x_prev_);
@@ -106,7 +104,7 @@ PointsList STASANeighbourhoodDyn::applyTranslation() {
     return clampToBounds(unflatten(result));
 }
 
-// Eq. (12): global multiplicative Gaussian perturbation (broad exploration).
+// global multiplicative Gaussian perturbation
 PointsList STASANeighbourhoodDyn::applyScaling() {
     std::vector<double> x = flatten(x_k_);
     int D = static_cast<int>(x.size());
@@ -119,7 +117,7 @@ PointsList STASANeighbourhoodDyn::applyScaling() {
     return clampToBounds(unflatten(result));
 }
 
-// Eq. (13): perturbs a single randomly chosen coordinate.
+// perturbs a single randomly chosen coordinate
 PointsList STASANeighbourhoodDyn::applyAxisTransf() {
     std::vector<double> x = flatten(x_k_);
     int D = static_cast<int>(x.size());

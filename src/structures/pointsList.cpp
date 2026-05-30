@@ -3,7 +3,7 @@
 
 PointsList::PointsList() {}
 
-// Member initializer list initializes the internal vector in a single operation.
+// Member initializer list initializes the internal vector in a single operation
 PointsList::PointsList(std::vector<Point> points)
     : points(points) {}
 

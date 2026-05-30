@@ -1,5 +1,6 @@
 #include "drone.hpp"
 
+// can be define the dimension of the drone
 Drone::Drone(Point position, double radius)
     : position(position), radius(radius) {}
 

@@ -23,7 +23,7 @@ double Controller::calculateDistance(const PointsList& a, const PointsList& b) {
 }
 
 void Controller::applyDisruption(PointsList& current, const PointsList& best, const PointsList& neighbor, int current_iter) {
-    // evaluation of the threshold (16)
+    // evaluation of the threshold
     double C = C0 * (1.0 - static_cast<double>(current_iter) / total_iters);
 
     // calculate distance between Ri,j and Ri (15)

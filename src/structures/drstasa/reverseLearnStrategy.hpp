@@ -20,8 +20,6 @@ public:
     );
 
     // Applies the reverse learning update to every individual in pop.
-    // evalFn: fitness function for a waypoint-only PointsList (no start/end).
-    // nWaypoints: number of intermediate waypoints per individual.
     void apply(std::vector<PointsList>& pop,
                std::vector<double>&    fitVals,
                std::function<double(const PointsList&)> evalFn,

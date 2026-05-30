@@ -2,7 +2,7 @@
 #ifndef PARALLEL_SCATTERED_SIMULATED_ANNEALING
 #define PARALLEL_SCATTERED_SIMULATED_ANNEALING
 
-// OpenMP is required for the parallelization
+// OpenMP 
 #include <omp.h>
 
 #include <stdexcept>
@@ -23,7 +23,7 @@ public:
 		const std::function<double(typename Sampler::Neighbourhood::PointType)>& func,
 		std::vector<typename Sampler::Neighbourhood::PointType> p0s,
 		std::vector<AnnealingExecutionPolicy<Sampler>> policies
-		// NOTE: View the note of the CommonParallel algorithm for the choice of std::vector here
+
 	) -> typename Sampler::Neighbourhood::PointType {
 
 		if (policies.size() != algo_num_threads || policies.size() == 0) {
@@ -40,14 +40,11 @@ public:
 #pragma omp parallel num_threads(algo_num_threads)
 		{
 			// Each thread geets its own starting point in its own domain.
-			// As a sanity check ensure this is ok! e.g. check if a point is actually
-			// contained in its domain
 			PointType pt = p0s[omp_get_thread_num()], prev = 0.0;
 			const auto& policy = policies[omp_get_thread_num()];
 
 			policy.neighbourhood().from(prev, pt);
-			// This only happens when p0 is not inside the original domain and is
-			// to be considered a bug!
+
 			if (!policy.neighbourhood().contains(pt)) {
 				throw std::invalid_argument("One of the domains is incorrectly configured so that the initial point of" 
 				" a thread was not cointained in its own domain");
@@ -69,7 +66,6 @@ public:
 
 					new_energy = func(new_p);
 					// Accept the new value stochastically based on the energy
-					// delta and the current temperature
 					bool do_accept = policy.criterion()->accept(
 						new_energy - energy, iter,
 						param->temp());
@@ -91,8 +87,7 @@ public:
 					break;
 			}
 
-			// Before OMP 4.0 we cannot define a reduction to a minimum value
-			// Just briefly atomically update the minimum value.
+
 #pragma omp critical
 			{
 				if (energy < min_energy) {
@@ -111,11 +106,7 @@ public:
 		// The main object containing the backbone of our simulated annealing
 		// algorithm
 		std::initializer_list<AnnealingExecutionPolicy<Sampler>> policies
-		// NOTE: We do not take the policies by reference here to allow the usage
-		// of std::vectors and initializer lists. If that weren't the case we would
-		// need to handle reference_wrappers and all that overhead. Policy objects are
-		// 64 bytes large and only a few of them are present at any point, so the overhead
-		// is neglibigle with respect to the headaches of managing the references.
+
 	) -> typename Sampler::Neighbourhood::PointType {
 		return run(func, std::vector<typename Sampler::Neighbourhood::PointType>(p0s),
 			std::vector<AnnealingExecutionPolicy<Sampler>>(policies));

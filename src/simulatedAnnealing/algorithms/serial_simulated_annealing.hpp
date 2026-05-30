@@ -16,7 +16,7 @@ public:
 		const std::function<double(typename Sampler::Neighbourhood::PointType)>& func,
 		const typename Sampler::Neighbourhood::PointType& p0,
 		// The main object containing the backbone of our simulated annealing
-		// algorithm
+
 		AnnealingExecutionPolicy<Sampler>& policy
 	) -> typename Sampler::Neighbourhood::PointType {
 
@@ -42,9 +42,7 @@ public:
 					new_p = policy.sampler()->sample(
 						policy.neighbourhood(), 1000);
 				} catch (const sa::SamplerFailure&) {
-					// Domain and step-size mismatch (common when x/y span is
-					// orders of magnitude larger than the z range): skip this
-					// inner iteration rather than crashing.
+					// Domain and step-size mismatch 
 					continue;
 				}
 

@@ -23,7 +23,7 @@ public:
     // Runs the SA and evaluate the path  
     PointsList run(const PointsList& initialPath) {
 
-        // A cluster with a single point has no ordering to optimise.
+        // A cluster with a single point has no ordering to optimise
         if (initialPath.size() < 2) return initialPath;
 
         PointsList current  = initialPath;

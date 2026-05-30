@@ -35,4 +35,4 @@ protected:
 	double threshold;
 };
 
-#endif //! ALGO_SIMULATED_ANNEALING
+#endif 

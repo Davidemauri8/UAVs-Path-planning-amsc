@@ -12,33 +12,33 @@ public:
         double radiusDegLon, radiusDegLat;
     };
 
-    // Percorso singolo — linea rossa (comportamento originale)
+    // Single path (red line)
     static void writeKML(const PointsList& points,
                          const std::string& filename);
 
-    // Percorsi multi-cluster — un colore per cluster, raggruppati in folder
+    // Multi cluster path 
     static void writeKMLClusters(const std::vector<PointsList>& clusters,
                                  const std::string& filename);
 
-    // SA/DRSTASA paths: LineString only + text labels for original target points (no icons)
+    // SA and DRSTASA paths 
     static void writeKMLClustersWithTargets(const std::vector<PointsList>& paths,
                                             const std::vector<PointsList>& targets,
                                             const std::string& filename);
 
-    // SA (dashed) + DRSTASA (solid) side-by-side per cluster, with obstacle circles
+    // SA (dashed) and DRSTASA (solid) 
     static void writeKMLComparison(const std::vector<PointsList>& saPaths,
                                    const std::vector<PointsList>& drstasaPaths,
                                    const std::vector<PointsList>& targets,
                                    const std::vector<ObstacleCircle>& obstacles,
                                    const std::string& filename);
 
-    // CSV: target (input TSP-ordered) + waypoint SA + waypoint DRSTASA per cluster
+    // CSV target
     static void writeCSVClusters(const std::vector<PointsList>& targets,
                                  const std::vector<PointsList>& saWaypoints,
                                  const std::vector<PointsList>& drstasaWaypoints,
                                  const std::string& filename);
 
-    // Confronto fitness
+    // comparison fitness
     static void printComparison(double totalSAFit, double totalDRSTASAFit);
 };
 

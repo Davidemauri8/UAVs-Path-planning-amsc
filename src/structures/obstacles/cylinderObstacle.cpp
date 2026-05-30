@@ -27,7 +27,7 @@ double CylinderObstacle::segmentCost(const Point& A, const Point& B, double dron
     Point close = A + (v * t);
     double d_k  = close.diff(center).norm();
 
-    // Effective thresholds inflated by the drone's physical footprint (Minkowski sum).
+    // Effective thresholds inflated by the drone's physical footprint (Minkowski sum)
     double hardRadius = radius + droneRadius;
     double softRadius = radius + buffer + droneRadius;
 

@@ -15,6 +15,14 @@ static constexpr double zMin       = 800.0;
 static constexpr double zMax       = 950.0;
 static constexpr int    N_RUNS     = 5;
 
+
+// This software module serves as the entry-point for the experimental
+// validation of route optimization algorithms for multi-UAV.
+// EXPERIMENT 1: Evaluates execution time across varying CPU thread counts 
+// to measure the efficiency of the software parallelization
+// EXPERIMENT 2: Analyzes trajectory quality (Fitness) under a progressive 
+// increase in active obstacles to verify the convergence capabilities
+
 int main()
 {
     const GeoOrigin origin = {63.985, -22.605};
@@ -29,8 +37,7 @@ int main()
     KMeans(K, 100).run(allPoints);
     std::cout << allPoints.size() << " points loaded, K=" << K << " clusters.\n\n";
 
-    // ── Experiment 1: wall time vs number of threads ──────────────────────
-    // Obstacle set is fixed (all obstacles); only numThreads varies.
+    // Experiment 1: wall time vs number of threads
     {
         const std::vector<int> threadCounts = {1, 2, 3, 4};
         FitnessFunction fitness = makeDefaultFitness(zMin, zMax);
@@ -39,7 +46,7 @@ int main()
         csv << std::fixed << std::setprecision(6);
         csv << "threads,run,sa_fit,drstasa_fit,wall_time\n";
 
-        std::cout << "=== Experiment 1: Parallelization ===\n";
+        std::cout << "Experiment 1: Parallelization\n";
         for (int t : threadCounts) {
             for (int r = 0; r < N_RUNS; ++r) {
                 std::cout << "  threads=" << t
@@ -58,8 +65,8 @@ int main()
         std::cout << "-> ../output/bench_parallel.csv\n\n";
     }
 
-    // ── Experiment 2: fitness vs number of obstacles ──────────────────────
-    // numThreads is fixed to K; obstacle count varies from 0 to max.
+    // Experiment 2: fitness vs number of obstacles 
+    // numThreads is fixed to K; obstacle count varies from 0 to max
     {
         const int maxObs  = static_cast<int>(buildDefaultObstacles().size());
         const int nPoints = 7;
@@ -72,7 +79,7 @@ int main()
         csv << std::fixed << std::setprecision(6);
         csv << "n_obstacles,run,sa_fit,drstasa_fit,wall_time\n";
 
-        std::cout << "=== Experiment 2: Fitness vs N Obstacles (max=" << maxObs << ") ===\n";
+        std::cout << "Experiment 2: Fitness vs N Obstacles (max=" << maxObs << ") ===\n";
         for (int nObs : obsCounts) {
             FitnessFunction fitness = makeDefaultFitness(zMin, zMax, nObs);
             for (int r = 0; r < N_RUNS; ++r) {
