@@ -63,8 +63,6 @@ int main()
     BenchmarkResult res = runPipelineOptimization<NWaypoints>(
         allPoints, K, fitness, zMin, zMax, /*numThreads=*/K);
     std::cout << "Completed in " << res.wallTime << "s\n";
-    //std::cout << "      Fitness SA:      " << res.saFit      << "\n";
-    //std::cout << "      Fitness DRSTASA: " << res.drstasaFit << "\n";
     PointsListExporter::printComparison(res.saFit, res.drstasaFit);
 
     // Export KML
