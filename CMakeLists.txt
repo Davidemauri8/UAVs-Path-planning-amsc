@@ -48,3 +48,9 @@ add_executable(testbenchmark src/testbenchmark.cpp ${COMMON_SOURCES})
 if(OpenMP_CXX_FOUND)
     target_link_libraries(testbenchmark PUBLIC OpenMP::OpenMP_CXX)
 endif()
+
+# TESTKMEANS
+add_executable(testkmeans src/testkmeans.cpp ${COMMON_SOURCES})
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(testkmeans PUBLIC OpenMP::OpenMP_CXX)
+endif()

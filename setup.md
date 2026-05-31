@@ -1,114 +1,121 @@
-# Guida ai parametri dell'algoritmo
+# Algorithm Parameter Reference
 
-Questo documento elenca **tutti i parametri configurabili** del progetto, indicando per ciascuno il file in cui viene impostato, la funzione/struttura di riferimento e il significato.
-
----
-
-## 1. Parametri globali dello scenario
-
-**File:** `src/testiceland.cpp` — funzione `main()`
-
-| Parametro | Valore attuale | Descrizione |
-|-----------|---------------|-------------|
-| `NWaypoints` | `4` | Numero di waypoint intermedi per ogni segmento di percorso |
-| `K` | `4` | Numero di droni / cluster K-Means |
-| `zMin` | `800.0` | Quota minima di volo (metri, coordinate locali) |
-| `zMax` | `900.0` | Quota massima di volo (metri, coordinate locali) |
-
-`NWaypoints` è un parametro template (`constexpr int`): viene propagato a `runPipelineOptimization<NWaypoints>` e quindi a tutti i sotto-algoritmi (SA, DRSTASA, LHS).
+This document lists **all configurable parameters** in the project, with the file, function, and meaning for each.
 
 ---
 
-## 2. Origine geografica (scenario Iceland)
+## 1. Global Scenario Parameters
 
-**File:** `src/scenarios/iceland.hpp` — funzione `icelandOrigin()`
+**File:** [src/testiceland.cpp](src/testiceland.cpp) — `main()`
 
-| Parametro | Valore | Descrizione |
-|-----------|--------|-------------|
-| `lat0` | `63.985` | Latitudine dell'origine GPS (Aeroporto di Keflavik) |
-| `lon0` | `-22.605` | Longitudine dell'origine GPS |
+| Parameter | Current value | Description |
+|-----------|--------------|-------------|
+| `NWaypoints` | `4` | Number of intermediate waypoints per path segment |
+| `K` | `4` | Number of UAVs / K-Means clusters |
+| `zMin` | `800.0` | Minimum flight altitude (metres, local coordinate frame) |
+| `zMax` | `950.0` | Maximum flight altitude (metres, local coordinate frame) |
 
-Tutti i punti del CSV e le coordinate degli ostacoli sono espressi in metri rispetto a questa origine. La conversione GPS↔metri usa `GeoUtils::toMeters` / `GeoUtils::toGPS`.
-
----
-
-## 3. Fitness function — pesi e vincoli
-
-**File:** `src/structures/functions/fitnessUtilities.cpp` — funzione `sampleFitnessWeights(zMin, zMax)`
-
-Questi pesi vengono usati da **entrambi** gli ottimizzatori (SA e DRSTASA). La struttura `FitnessWeights` è dichiarata in `src/structures/fitness/fitnessFunction.hpp` con tutti i campi a `0.0` di default: i valori effettivi vivono **solo** in `fitnessUtilities.cpp`.
-
-| Parametro | Valore | Descrizione |
-|-----------|--------|-------------|
-| `b1` | `5.0` | Peso del costo di **lunghezza percorso** (F1) |
-| `b2` | `10.0` | Peso del costo di **prossimità agli ostacoli** (F2) |
-| `b3` | `1.0` | Peso del costo di **deviazione di quota** (F3) |
-| `b4` | `5.0` | Peso del costo di **smoothness del percorso** (F4) |
-| `a1` | `1.0` | Sotto-peso per l'**angolo di svolta orizzontale** (dentro F4) |
-| `a2` | `1.0` | Sotto-peso per la **variazione di angolo di salita** (dentro F4) |
-| `hMin` | `= zMin` | Quota minima ammessa (preso dallo scenario) |
-| `hMax` | `= zMax` | Quota massima ammessa (preso dallo scenario) |
-| `droneRadius` | `1.5` | Raggio fisico del drone in metri (gonfia il raggio degli ostacoli) |
-
-La fitness totale è: `F = b1·F1 + b2·F2 + b3·F3 + b4·F4`.
-Violazioni di quota o collisioni restituiscono `+∞`, scartando la soluzione.
+`NWaypoints` is a template parameter (`constexpr int`): it propagates to `runPipelineOptimization<NWaypoints>` and from there to all sub-algorithms (SA, DRSTASA, LHS).
 
 ---
 
-## 4. Ostacoli cilindrici
+## 2. Geographic Origin (Iceland scenario)
 
-### 4a. Scenario Iceland
-**File:** `src/scenarios/iceland.hpp` — funzione `makeIcelandFitness(zMin, zMax)`
+**File:** [src/testiceland.cpp](src/testiceland.cpp) — `main()`
 
-Ogni ostacolo è un `CylinderObstacle(Point(x, y, 0, -1), radius, height, buffer)`.
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `lat0` | `63.985` | GPS origin latitude (near Keflavik Airport) |
+| `lon0` | `-22.605` | GPS origin longitude |
 
-| Ostacolo | x (m) | y (m) | radius (m) | height (m) | buffer (m) | Note |
-|----------|-------|-------|-----------|-----------|-----------|------|
-| Fagradalsfjall | 16212 | −8880 | 5000 | 385 | 2000 | Eruzioni 2021-23 |
-| Hekla | 141480 | −555 | 15000 | 1491 | 5000 | Vulcano più attivo |
-| Eyjafjallajökull | 145715 | −39405 | 12000 | 1651 | 4000 | Eruzione 2010 |
-| Krafla | 284906 | 192252 | 10000 | 818 | 3000 | Adiacente a Mývatn |
+All CSV points and obstacle coordinates are expressed in metres relative to this origin. Conversion between GPS and metres is handled by `GeoUtils::toMeters` / `GeoUtils::toGPS`.
 
-### 4b. Scenario di default / test
-**File:** `src/structures/functions/fitnessUtilities.cpp` — funzione `makeDefaultFitness(zMin, zMax)`
+Conversion factors:
+- `metersPerDegLat = 111320.0`
+- `metersPerDegLon = 111320.0 × cos(lat0 × π/180) ≈ 48840 m/deg`
 
-| Ostacolo | center (x, y, z) | radius (m) | height (m) | buffer (m) |
-|----------|-----------------|-----------|-----------|-----------|
-| Ostacolo 1 | (200, 300, 0) | 50 | 200 | 60 |
-| Ostacolo 2 | (−300, −200, 0) | 50 | 200 | 60 |
+---
 
-### 4c. Scenario sample / unit test
-**File:** `src/structures/functions/fitnessUtilities.cpp` — funzione `sampleFitnessFunction(zMin, zMax)`
+## 3. Fitness Function — Weights and Constraints
 
-| Ostacolo | center (x, y, z) | radius (m) | height (m) | buffer (m) |
-|----------|-----------------|-----------|-----------|-----------|
-| Ostacolo 1 | (250, 350, 0) | 40 | 200 | 50 |
-| Ostacolo 2 | (350, 450, 0) | 40 | 200 | 50 |
+**File:** [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) — `sampleFitnessWeights(zMin, zMax)`
 
-**Significato dei campi `CylinderObstacle`:**
-- `radius` — raggio di collisione dura (il drone non può entrare, pena fitness = ∞)
-- `height` — altezza del cilindro; sopra questa quota l'ostacolo non conta
-- `buffer` — spessore della zona di penalità morbida attorno al raggio duro
+These weights are shared by **both** optimisers (SA and DRSTASA). The `FitnessWeights` struct is declared in [src/structures/fitness/fitnessFunction.hpp](src/structures/fitness/fitnessFunction.hpp) with all fields defaulting to `0.0`; the operative values live **only** in `fitnessUtilities.cpp`.
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `b1` | `12.0` | Weight for **path length** cost (F1) |
+| `b2` | `20.0` | Weight for **obstacle proximity** cost (F2) |
+| `b3` | `2.0` | Weight for **altitude deviation** cost (F3) |
+| `b4` | `10.0` | Weight for **path smoothness** cost (F4) |
+| `a1` | `2.5` | Sub-weight for **horizontal turn angle** (inside F4) |
+| `a2` | `1.5` | Sub-weight for **climb angle variation** (inside F4) |
+| `hMin` | `= zMin` | Minimum allowed altitude (taken from scenario) |
+| `hMax` | `= zMax` | Maximum allowed altitude (taken from scenario) |
+| `droneRadius` | `3.0` | Physical drone radius in metres (inflates obstacle radii) |
+
+Total fitness: `F = b1·F1 + b2·F2 + b3·F3 + b4·F4`.  
+Altitude violations or collisions return `+∞`, discarding the solution.
+
+---
+
+## 4. Cylindrical Obstacles — Iceland Scenario
+
+**File:** [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) — `buildDefaultObstacles()`
+
+Each obstacle is `CylinderObstacle(Point(x, y, 0, -1), radius, height, buffer)`.
+
+**Field meanings:**
+- `radius` — hard collision radius (drone cannot enter; penalty = ∞)
+- `height` — cylinder height; above this altitude the obstacle has no effect
+- `buffer` — soft-penalty zone thickness around the hard radius
+
+| # | Name | x (m) | y (m) | radius (m) | height (m) | buffer (m) | Cluster |
+|---|------|--------|--------|-----------|-----------|-----------|---------|
+| 0 | Reykjanes Ridge | −25922.9 | 37805.7 | 8000 | 2000 | 100 | C1 |
+| 1 | Snæfellsjökull | −31531.5 | 97295.0 | 5000 | 1500 | 90 | C1 |
+| 2 | Vestfjarðahæðir | −75108.3 | 179579.3 | 5000 | 1500 | 80 | C2 |
+| 3 | Ísafjarðarfjöll | −19021.8 | 177911.3 | 5000 | 1500 | 80 | C2 |
+| 4 | Drangajökull | 26578.9 | 201262.3 | 6000 | 1500 | 90 | C2 |
+| 5 | Langjökull | 127290.6 | −14455.9 | 18000 | 1500 | 120 | C3 |
+| 6 | Hrafntinnusker | 174793.3 | −11898.4 | 3500 | 1500 | 70 | C3 |
+| 7 | Katla / Mýrdalsjökull | 187522.5 | −56821.2 | 10000 | 1500 | 140 | C3 |
+| 8 | Hverfjall | 246779.0 | 182359.1 | 2500 | 1500 | 60 | C0 |
+| 9 | Krafla | 285795.7 | 190698.7 | 5000 | 1500 | 80 | C0 |
+| 10 | Herðubreið | 319935.2 | 195146.5 | 3500 | 1500 | 100 | C0 |
+| 11 | Askja / Dyngjufjöll | 371388.4 | 195813.7 | 8000 | 1500 | 120 | C0 |
+| 12 | Snæfell | 388458.2 | 185806.2 | 5000 | 1500 | 110 | C0 |
+| 13 | Kverkfjöll | 408942.0 | 145108.8 | 6000 | 1500 | 130 | C0 |
+| 14 | Bárðarbunga | 430888.8 | 113418.3 | 9000 | 1500 | 150 | C0 |
+| 15 | Öræfajökull | 401870.2 | 95071.1 | 5000 | 1500 | 120 | C0 |
+| 16 | Hofsjökull | 372607.7 | 72832.1 | 14000 | 1500 | 130 | C0 |
+| 17 | Eiríksjökull | 107050.7 | 86620.3 | 3500 | 1500 | 80 | visual |
+| 18 | Langjökull (visual) | 122413.5 | 73944.1 | 17000 | 1500 | 120 | visual |
+| 19 | Þórisjökull | 152163.7 | 85397.1 | 4000 | 1500 | 80 | visual |
+| 20 | Hofsjökull (visual) | 179963.0 | 93848.0 | 13000 | 1500 | 130 | visual |
+| 21 | Vatnajökull (NW edge) | 234586.3 | 68384.3 | 22000 | 1500 | 150 | visual |
+
+Total: **22 obstacles**. The benchmark sweeps obstacle counts by calling `makeDefaultFitness(zMin, zMax, nObstacles)`, which trims this list via `buildDefaultObstacles()`.
 
 ---
 
 ## 5. K-Means
 
-**File:** `src/testiceland.cpp` — riga `KMeans(K, 100).run(allPoints)`
+**File:** [src/testiceland.cpp](src/testiceland.cpp) — `KMeans(K, 100).run(allPoints)`
 
-La classe `KMeans` è dichiarata in `src/structures/kmeans.hpp`.
+Class declared in [src/structures/kmeans.hpp](src/structures/kmeans.hpp).
 
-| Parametro | Valore | Descrizione |
-|-----------|--------|-------------|
-| `K` | `4` (da `testiceland.cpp`) | Numero di cluster (= numero di droni) |
-| `max_iterations` | `100` | Iterazioni massime per la convergenza dell'algoritmo |
-| `seed` | `42` (default nel costruttore) | Seed per l'inizializzazione casuale dei centroidi |
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `K` | `4` (from `testiceland.cpp`) | Number of clusters (= number of UAVs) |
+| `max_iterations` | `100` | Maximum iterations for centroid convergence |
+| `seed` | `42` (constructor default) | Seed for random centroid initialisation |
 
 ---
 
-## 6. TSP-SA (ordinamento dei waypoint nel cluster)
+## 6. TSP-SA (waypoint ordering within a cluster)
 
-**File:** `src/structures/pipeline/pipelineRunner.hpp` — dentro `runPipelineOptimization()`
+**File:** [src/structures/pipeline/pipelineRunner.hpp](src/structures/pipeline/pipelineRunner.hpp) — inside `runPipelineOptimization()`
 
 ```cpp
 TspSA(fitness,
@@ -117,41 +124,43 @@ TspSA(fitness,
       500).run(cluster);
 ```
 
-| Parametro | Valore | Descrizione |
-|-----------|--------|-------------|
-| `maxIter` | `500` | Iterazioni massime del SA per ordinare i waypoint |
-| Criterio | `MetropolisCriterion` | Criterio di accettazione probabilistica standard |
-| Scheduler | `ExponentialScheduler` | Raffreddamento esponenziale |
-| T0 (scheduler) | `100.0` | Temperatura iniziale |
-| Tmin (scheduler) | `0.01` | Temperatura minima |
-| stab_it (scheduler) | `200` | Iterazioni di stabilizzazione per ogni livello T |
-| alpha (scheduler) | `0.95` | Fattore di raffreddamento: T(k+1) = T(k) · α |
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `maxIter` | `500` | Maximum SA iterations for waypoint ordering |
+| Criterion | `MetropolisCriterion` | Standard probabilistic acceptance criterion |
+| Scheduler | `ExponentialScheduler` | Exponential cooling |
+| T0 | `100.0` | Initial temperature |
+| Tmin | `0.01` | Minimum temperature |
+| `stab_it` | `200` | Stabilisation iterations per temperature level |
+| `alpha` | `0.95` | Cooling factor: T(k+1) = T(k) · α |
 
 ---
 
-## 7. SA classico per segmento
+## 7. Classic SA — Per-Segment Optimisation
 
-**File:** `src/structures/segment/segmentOptimizer.hpp`
+**File:** [src/structures/segment/segmentOptimizer.hpp](src/structures/segment/segmentOptimizer.hpp)
 
-### 7a. `runSegmentSA()` — singola run SA
+### 7a. `runSegmentSA()` — single SA run
 
 ```cpp
 SegmentSAResult<NWaypoints> runSegmentSA(
     ...,
-    long maxIter = 6000)
+    long maxIter = 5000)
 ```
 
-| Parametro | Valore default | Descrizione |
-|-----------|---------------|-------------|
-| `maxIter` | `6000` | Iterazioni massime della singola run SA |
-| Scheduler T0 | `100.0` | Temperatura iniziale |
-| Scheduler Tmin | `0.01` | Temperatura minima |
-| Scheduler stab_it | `1` | Iterazioni di stabilizzazione per livello T |
-| Scheduler alpha | `0.95` | Fattore di raffreddamento |
-| `domRadius · 0.1` | calcolato | Raggio del vicinato per il campionamento locale |
-| LocalSamplerFixed k | `0.1` | Parametro di località: σ = k · neighbourhood_radius |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `maxIter` | `5000` | Maximum iterations of a single SA run |
+| Scheduler T0 | `100.0` | Initial temperature |
+| Scheduler Tmin | `0.01` | Minimum temperature |
+| Scheduler `stab_it` | `15` | Stabilisation iterations per temperature level |
+| Scheduler `alpha` | `0.95` | Cooling factor |
+| `stepRadius` | computed | `0.1 × xyDiag / √Dim`; XY diagonal of segment bounds divided by dimension |
+| `LocalSamplerFixed k` | `0.1` | Locality parameter: σ = k · stepRadius |
 
-Il dominio di ricerca è una **sfera** centrata nel mezzo del bounding box del segmento, con raggio `√NWaypoints · √(Δx² + Δy² + Δz²)`.
+Budget: `stab_it × maxIter = 15 × 5000 = 75,000` fitness evaluations — matched to DRSTASA budget.
+
+The search domain is an **axis-aligned hyperrectangle** spanning the segment's bounding box in XY and `[zMin, zMax]` in altitude.
 
 ### 7b. `runSegmentSAMultiStart()` — multi-start SA
 
@@ -162,80 +171,80 @@ SegmentSAResult<NWaypoints> runSegmentSAMultiStart(
     long maxIterPerRestart = 6000)
 ```
 
-| Parametro | Valore default | Descrizione |
-|-----------|---------------|-------------|
-| `nRestarts` | `4` | Numero di run SA indipendenti; viene tenuto il risultato migliore |
-| `maxIterPerRestart` | `6000` | Iterazioni per ciascuna run (passato a `runSegmentSA`) |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `nRestarts` | `4` | Number of independent SA runs; best result is kept |
+| `maxIterPerRestart` | `6000` | Iterations per restart (passed to `runSegmentSA`) |
 
-### 7c. Bounds del segmento — `computeBounds()`
-
-**File:** `src/structures/segment/segmentOptimizer.hpp`
+### 7c. Segment bounds — `computeBounds()`
 
 ```cpp
 SegmentBounds computeBounds(const PointsList& ordered,
-                            double marginFactor = 0.2,
-                            double marginMin    = 50.0);
+                            double marginFactor = 1.0,
+                            double marginMin    = 10.0);
 ```
 
-| Parametro | Valore default | Descrizione |
-|-----------|---------------|-------------|
-| `marginFactor` | `0.2` | Il bounding box XY viene espanso del 20% su ciascun lato |
-| `marginMin` | `50.0` m | Margine assoluto minimo garantito (evita domini degenerati) |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `marginFactor` | `1.0` | The XY bounding box is expanded by 100% on each side |
+| `marginMin` | `10.0` m | Minimum absolute margin (prevents degenerate domains) |
 
 ---
 
 ## 8. LHS (Latin Hypercube Sampling)
 
-**File:** usato in `src/structures/segment/segmentOptimizer.hpp` e `src/structures/drstasa/drstasa.cpp`
+**File:** used in [src/structures/segment/segmentOptimizer.hpp](src/structures/segment/segmentOptimizer.hpp) and [src/structures/drstasa/drstasa.cpp](src/structures/drstasa/drstasa.cpp)
 
 ```cpp
 Lhs lhs(xMin, xMax, yMin, yMax, zMin, zMax, NWaypoints, idCluster);
 ```
 
-La classe è dichiarata in `src/structures/lhs/lhs.hpp`.
+Class declared in [src/structures/lhs/lhs.hpp](src/structures/lhs/lhs.hpp).
 
-| Parametro | Sorgente | Descrizione |
-|-----------|---------|-------------|
-| `xMin, xMax` | bounds del segmento / DRSTASA::Config | Limiti sull'asse X per il campionamento |
-| `yMin, yMax` | bounds del segmento / DRSTASA::Config | Limiti sull'asse Y per il campionamento |
-| `zMin, zMax` | scenario (800–900 m per Iceland) | Limiti di quota per il campionamento |
-| `n` | = `NWaypoints` | Numero di campioni generati (uno per waypoint) |
-| `idCluster` | `-1` (neutro) | ID cluster da assegnare ai punti generati |
+| Parameter | Source | Description |
+|-----------|--------|-------------|
+| `xMin, xMax` | segment bounds / DRSTASA::Config | X-axis sampling limits |
+| `yMin, yMax` | segment bounds / DRSTASA::Config | Y-axis sampling limits |
+| `zMin, zMax` | scenario (800–950 m for Iceland) | Altitude sampling limits |
+| `n` | `= NWaypoints` | Number of samples generated (one per waypoint) |
+| `idCluster` | `-1` (neutral) | Cluster ID assigned to generated points |
 
-LHS è usato **solo** per generare il punto di partenza (`startPoint`) di ogni run SA e della popolazione iniziale di DRSTASA.
+LHS is used **only** to generate the starting point (`startPoint`) of each SA run and the initial population of DRSTASA.
 
 ---
 
 ## 9. DRSTASA
 
-**File:** `src/structures/functions/fitnessUtilities.cpp` — funzione `GetConfigurationDRST(NWaypoints)`
+**File:** [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) — `GetConfigurationDRST(NWaypoints)`
 
-La struttura `DRSTASA::Config` è dichiarata in `src/structures/drstasa/drstasa.hpp` con tutti i campi a `0.0` di default. I valori effettivi vivono **solo** in `fitnessUtilities.cpp`.
+The `DRSTASA::Config` struct is declared in [src/structures/drstasa/drstasa.hpp](src/structures/drstasa/drstasa.hpp) with all fields defaulting to `0.0`. The operative values live **only** in `fitnessUtilities.cpp`.
 
 ```cpp
 DRSTASA::Config GetConfigurationDRST(int NWaypoints)
 ```
 
-| Parametro | Valore | Descrizione |
-|-----------|--------|-------------|
-| `popSize` | `20` | Dimensione della popolazione |
-| `maxIter` | `300` | Iterazioni massime dell'algoritmo DRSTASA |
-| `T0` | `100.0` | Temperatura iniziale del SA interno |
-| `alpha` | `0.93` | Fattore di raffreddamento: T(k+1) = T(k) · α |
-| `p` | `0.5` | Soglia di probabilità per la **reverse learning strategy**: se `rand > p` si applica il reverse learning |
-| `C0` | `2.0` | Forza iniziale dell'operatore di **disruption**: C(iter) = C0 · (1 − iter/maxIter) |
-| `eps_rot` | `150.0` | Step dell'operatore di **rotazione** (Eq. 10 del paper) |
-| `eps_trans` | `100.0` | Step dell'operatore di **traslazione** (Eq. 11) |
-| `eps_scale` | `0.05` | Perturbazione dell'operatore di **scaling** (Eq. 12) |
-| `eps_axis` | `0.05` | Perturbazione dell'operatore di **axis-transform** (Eq. 13) |
-| `nWaypoints` | `= NWaypoints` | Numero di waypoint intermedi (passato dal chiamante) |
-| `xMin, xMax` | bounds del segmento | Limiti X del dominio di ricerca (impostati in `pipelineRunner.hpp`) |
-| `yMin, yMax` | bounds del segmento | Limiti Y del dominio di ricerca (impostati in `pipelineRunner.hpp`) |
-| `zMin, zMax` | scenario | Limiti di quota (impostati in `pipelineRunner.hpp`) |
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `popSize` | `30` | Population size |
+| `maxIter` | `500` | Maximum DRSTASA iterations |
+| `T0` | `100.0` | Initial SA temperature |
+| `alpha` | `0.96` | Cooling factor: T(k+1) = T(k) · α |
+| `p` | `0.4` | Reverse-learning threshold: applied when `rand > p` (60% of iterations) |
+| `C0` | `3.0` | Initial disruption strength: C(iter) = C0 · (1 − iter/maxIter) |
+| `eps_rot` | `180.0` | Step for the **rotation** operator |
+| `eps_trans` | `150.0` | Step for the **translation** operator |
+| `eps_scale` | `0.08` | Perturbation for the **scaling** operator |
+| `eps_axis` | `0.08` | Perturbation for the **axis-transform** operator |
+| `nWaypoints` | `= NWaypoints` | Number of intermediate waypoints (passed by caller) |
+| `xMin, xMax` | segment bounds | X search domain limits (set in `pipelineRunner.hpp`) |
+| `yMin, yMax` | segment bounds | Y search domain limits (set in `pipelineRunner.hpp`) |
+| `zMin, zMax` | scenario | Altitude limits (set in `pipelineRunner.hpp`) |
 
-I bounds XY vengono scritti in `pipelineRunner.hpp` subito prima di creare l'istanza DRSTASA:
+Budget: `popSize × 5 operators × maxIter = 30 × 5 × 500 = 75,000` fitness evaluations — matched to SA budget.
+
+The XY bounds are written in `pipelineRunner.hpp` just before creating the DRSTASA instance:
 ```cpp
-DRSTASA::Config localCfg = drsCfg;   // copia la config base
+DRSTASA::Config localCfg = drsCfg;   // copy base config
 localCfg.xMin = b.xMin; localCfg.xMax = b.xMax;
 localCfg.yMin = b.yMin; localCfg.yMax = b.yMax;
 DRSTASA drstasa(fitness, localCfg);
@@ -243,30 +252,30 @@ DRSTASA drstasa(fitness, localCfg);
 
 ### 9a. Reverse Learning Strategy
 
-**File:** `src/structures/drstasa/reverseLearnStrategy.hpp`
+**File:** [src/structures/drstasa/reverseLearnStrategy.hpp](src/structures/drstasa/reverseLearnStrategy.hpp)
 
-Il punto di apprendimento inverso è calcolato come:
+The reverse learning point is computed as:
 - `xBar[d] = r5 · (dimMin[d] + dimMax[d] − x[d])`
 - `xNew[d] = (1 − r6) · x[d] + r6 · xBar[d]`
 
-I limiti usati sono quelli di `DRSTASA::Config` (xMin/xMax, yMin/yMax, zMin/zMax). Il parametro `p` controlla con che frequenza si esegue il reverse learning.
+Limits used are from `DRSTASA::Config` (xMin/xMax, yMin/yMax, zMin/zMax). Parameter `p` controls how often reverse learning is applied.
 
 ### 9b. Controller (Disruption Operator)
 
-**File:** `src/simulatedAnnealing/controller/controller.hpp`
+**File:** [src/simulatedAnnealing/controller/controller.hpp](src/simulatedAnnealing/controller/controller.hpp)
 
-| Parametro | Sorgente | Descrizione |
-|-----------|---------|-------------|
-| `C0` | `DRSTASA::Config.C0 = 2.0` | Forza iniziale della disruption |
-| `total_iters` | `DRSTASA::Config.maxIter = 300` | Totale iterazioni per scalare C nel tempo |
+| Parameter | Source | Description |
+|-----------|--------|-------------|
+| `C0` | `DRSTASA::Config.C0 = 3.0` | Initial disruption strength |
+| `total_iters` | `DRSTASA::Config.maxIter = 500` | Total iterations used to scale C over time |
 
 Formula: `C(iter) = C0 · (1.0 − current_iter / total_iters)`
 
 ---
 
-## 10. Scheduler di temperatura (SA classico e DRSTASA)
+## 10. Temperature Schedulers (classic SA and DRSTASA)
 
-**File:** `src/simulatedAnnealing/scheduler/scheduler.hpp`
+**File:** [src/simulatedAnnealing/scheduler/scheduler.hpp](src/simulatedAnnealing/scheduler/scheduler.hpp)
 
 ### LinearScheduler
 ```cpp
@@ -274,44 +283,87 @@ LinearScheduler(double T0, double delta, double Tmin, long stab_it)
 ```
 T(k+1) = T(k) − delta
 
-| Parametro | Descrizione |
+| Parameter | Description |
 |-----------|-------------|
-| `T0` | Temperatura iniziale |
-| `delta` | Decremento fisso per ogni step |
-| `Tmin` | Temperatura minima (pavimento) |
-| `stab_it` | Iterazioni di stabilizzazione a ogni livello T |
+| `T0` | Initial temperature |
+| `delta` | Fixed decrement per step |
+| `Tmin` | Minimum temperature (floor) |
+| `stab_it` | Stabilisation iterations per temperature level |
 
-### ExponentialScheduler *(quello usato nel progetto)*
+### ExponentialScheduler *(used throughout the project)*
 ```cpp
 ExponentialScheduler(double T0, double Tmin, long stab_it, double alpha = 0.95)
 ```
 T(k+1) = T(k) · alpha
 
-| Parametro | Descrizione |
+| Parameter | Description |
 |-----------|-------------|
-| `T0` | Temperatura iniziale |
-| `Tmin` | Temperatura minima |
-| `stab_it` | Iterazioni di stabilizzazione a ogni livello T |
-| `alpha` | Fattore di raffreddamento ∈ (0, 1) |
+| `T0` | Initial temperature |
+| `Tmin` | Minimum temperature |
+| `stab_it` | Stabilisation iterations per temperature level |
+| `alpha` | Cooling factor ∈ (0, 1) |
 
 ---
 
-## 11. Riepilogo: dove toccare cosa
+## 11. Benchmark Runner
 
-| Cosa si vuole cambiare | File da modificare | Funzione/riga |
-|------------------------|-------------------|---------------|
-| Numero di droni K | `src/testiceland.cpp` | `constexpr int K` |
-| Waypoint per segmento | `src/testiceland.cpp` | `constexpr int NWaypoints` |
-| Quota di volo | `src/testiceland.cpp` | `const double zMin, zMax` |
-| Pesi fitness (b1–b4, a1–a2) | `src/structures/functions/fitnessUtilities.cpp` | `sampleFitnessWeights()` |
-| Raggio drone | `src/structures/functions/fitnessUtilities.cpp` | `sampleFitnessWeights()` → `droneRadius` |
-| Ostacoli scenario Iceland | `src/scenarios/iceland.hpp` | `makeIcelandFitness()` |
-| Ostacoli scenario default | `src/structures/functions/fitnessUtilities.cpp` | `makeDefaultFitness()` |
-| Parametri DRSTASA | `src/structures/functions/fitnessUtilities.cpp` | `GetConfigurationDRST()` |
-| Iterazioni SA per segmento | `src/structures/segment/segmentOptimizer.hpp` | `runSegmentSAMultiStart()` → `maxIterPerRestart`, `nRestarts` |
-| Scheduler SA per segmento | `src/structures/segment/segmentOptimizer.hpp` | `runSegmentSA()` → `ExponentialScheduler(...)` |
-| Iterazioni TSP-SA | `src/structures/pipeline/pipelineRunner.hpp` | `TspSA(..., 500)` |
-| Scheduler TSP-SA | `src/structures/pipeline/pipelineRunner.hpp` | `ExponentialScheduler(100.0, 0.01, 200, 0.95)` |
-| K-Means max iterazioni | `src/testiceland.cpp` | `KMeans(K, 100)` |
-| Margini bounding box | `src/structures/segment/segmentOptimizer.hpp` | `computeBounds()` → `marginFactor`, `marginMin` |
-| Numero di thread OMP | `src/testiceland.cpp` | `runPipelineOptimization<NWaypoints>(..., /*numThreads=*/1)` |
+**File:** [src/testbenchmark.cpp](src/testbenchmark.cpp)
+
+Runs two experiments and writes CSV output files for plotting.
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `NWaypoints` | `4` | Intermediate waypoints per segment (template) |
+| `K` | `4` | Number of clusters |
+| `zMin / zMax` | `800.0 / 950.0` | Altitude band |
+| `N_RUNS` | `5` | Repetitions per configuration |
+
+**Experiment 1 — Parallelisation:**  
+Threads ∈ {1, 2, 3, 4}, all 22 obstacles. Output: `output/bench_parallel.csv`  
+Columns: `threads, run, sa_fit, drstasa_fit, wall_time`
+
+**Experiment 2 — Fitness vs obstacle count:**  
+Threads = K = 4, obstacle count swept over 7 evenly-spaced values from 0 to `maxObs` (22). Output: `output/bench_obstacles.csv`  
+Columns: `n_obstacles, run, sa_fit, drstasa_fit, wall_time`
+
+K-Means is run **once** at startup; the same cluster assignment is reused across all N_RUNS repetitions.
+
+---
+
+## 12. Plot Generation
+
+**File:** [scripts/plot_results.py](scripts/plot_results.py)
+
+Reads the two benchmark CSVs and generates:
+
+| Output file | Content |
+|-------------|---------|
+| `output/plot_parallel.png` | Execution time vs number of threads (speedup annotated) |
+| `output/plot_obstacles.png` | SA vs DRSTASA total fitness vs number of obstacles (±1σ bands) |
+
+Run from any directory:
+```bash
+python scripts/plot_results.py
+```
+
+---
+
+## 13. Quick Reference — What to Change and Where
+
+| What to change | File | Function / line |
+|----------------|------|-----------------|
+| Number of UAVs K | [src/testiceland.cpp](src/testiceland.cpp) | `constexpr int K` |
+| Waypoints per segment | [src/testiceland.cpp](src/testiceland.cpp) | `constexpr int NWaypoints` |
+| Flight altitude band | [src/testiceland.cpp](src/testiceland.cpp) | `const double zMin, zMax` |
+| Fitness weights (b1–b4, a1–a2) | [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) | `sampleFitnessWeights()` |
+| Drone radius | [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) | `sampleFitnessWeights()` → `droneRadius` |
+| Obstacles | [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) | `buildDefaultObstacles()` |
+| DRSTASA parameters | [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) | `GetConfigurationDRST()` |
+| SA iterations per segment | [src/structures/segment/segmentOptimizer.hpp](src/structures/segment/segmentOptimizer.hpp) | `runSegmentSAMultiStart()` → `maxIterPerRestart`, `nRestarts` |
+| SA scheduler (per segment) | [src/structures/segment/segmentOptimizer.hpp](src/structures/segment/segmentOptimizer.hpp) | `runSegmentSA()` → `ExponentialScheduler(...)` |
+| TSP-SA iterations | [src/structures/pipeline/pipelineRunner.hpp](src/structures/pipeline/pipelineRunner.hpp) | `TspSA(..., 500)` |
+| TSP-SA scheduler | [src/structures/pipeline/pipelineRunner.hpp](src/structures/pipeline/pipelineRunner.hpp) | `ExponentialScheduler(100.0, 0.01, 200, 0.95)` |
+| K-Means max iterations | [src/testiceland.cpp](src/testiceland.cpp) | `KMeans(K, 100)` |
+| Segment bounding box margins | [src/structures/segment/segmentOptimizer.hpp](src/structures/segment/segmentOptimizer.hpp) | `computeBounds()` → `marginFactor`, `marginMin` |
+| Number of OMP threads | [src/testiceland.cpp](src/testiceland.cpp) | `runPipelineOptimization<NWaypoints>(..., /*numThreads=*/K)` |
+| Benchmark repetitions | [src/testbenchmark.cpp](src/testbenchmark.cpp) | `N_RUNS` |

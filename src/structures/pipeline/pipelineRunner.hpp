@@ -23,19 +23,25 @@ struct BenchmarkResult {
     std::vector<PointsList> orderedClusters;   // waypoint TSP
 };
 
-// Runs the full pipeline 
+// Runs the full pipeline.
+// drsBase: optional override for the DRSTASA base config (e.g. reduced
+//          maxIter/popSize for fast benchmarks). Pass nullptr to use the
+//          default config from GetConfigurationDRST().
 template<int NWaypoints>
 BenchmarkResult runPipelineOptimization(
     const PointsList&      allPoints,
     int                    K,
     const FitnessFunction& fitness,
     double zMin, double zMax,
-    int numThreads)
+    int numThreads,
+    const DRSTASA::Config* drsBase = nullptr)
 {
     omp_set_dynamic(0);
     omp_set_num_threads(numThreads);
 
-    DRSTASA::Config drsCfg = GetConfigurationDRST(NWaypoints);
+    DRSTASA::Config drsCfg = (drsBase != nullptr)
+        ? *drsBase
+        : GetConfigurationDRST(NWaypoints);
     drsCfg.zMin = zMin;
     drsCfg.zMax = zMax;
     PointsList saPath, drstasaPath;
