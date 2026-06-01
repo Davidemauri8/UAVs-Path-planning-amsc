@@ -1,5 +1,6 @@
 #include "structures/drstasa/stasaNeighbourhood.hpp"
 #include <cmath>
+#include <omp.h>
 
 STASANeighbourhoodDyn::STASANeighbourhoodDyn(
     double eps_rot, double eps_trans, double eps_scale, double eps_axis,
@@ -41,7 +42,7 @@ PointsList STASANeighbourhoodDyn::clampToBounds(const PointsList& path) const {
     return result;
 }
 
-// Public interface 
+// Public interface
 void STASANeighbourhoodDyn::from(const PointsList& prev, const PointsList& curr) {
     x_prev_ = prev;
     x_k_    = curr;
@@ -50,21 +51,38 @@ void STASANeighbourhoodDyn::from(const PointsList& prev, const PointsList& curr)
 PointsList STASANeighbourhoodDyn::generateNext() {
     std::uniform_int_distribution<> opDist(0, 3);
     switch (opDist(rng_)) {
-        case 0:  return applyRotation();
-        case 1:  return applyTranslation();
-        case 2:  return applyScaling();
-        default: return applyAxisTransf();
+        case 0:  return applyRotation(rng_);
+        case 1:  return applyTranslation(rng_);
+        case 2:  return applyScaling(rng_);
+        default: return applyAxisTransf(rng_);
     }
 }
 
+// Generate all four candidates. When not already inside a parallel region
+// the four independent operators run concurrently, each with its own rng
+// seeded from the master rng_ so the sequence is still deterministic.
 std::array<PointsList, 4> STASANeighbourhoodDyn::generateAll() {
-    return { applyRotation(), applyTranslation(), applyScaling(), applyAxisTransf() };
+    unsigned s0 = rng_(), s1 = rng_(), s2 = rng_(), s3 = rng_();
+    std::array<PointsList, 4> results;
+
+    #pragma omp parallel for schedule(static) if(!omp_in_parallel())
+    for (int op = 0; op < 4; ++op) {
+        const unsigned seeds[4] = {s0, s1, s2, s3};
+        std::mt19937 localRng(seeds[op]);
+        switch (op) {
+            case 0: results[0] = applyRotation   (localRng); break;
+            case 1: results[1] = applyTranslation(localRng); break;
+            case 2: results[2] = applyScaling    (localRng); break;
+            case 3: results[3] = applyAxisTransf (localRng); break;
+        }
+    }
+    return results;
 }
 
-// Four STASA operators
+// Four STASA operators — each accepts rng by reference
 
 // explores a hypersphere centred on the current point
-PointsList STASANeighbourhoodDyn::applyRotation() {
+PointsList STASANeighbourhoodDyn::applyRotation(std::mt19937& rng) {
     std::vector<double> x = flatten(x_k_);
     int D = static_cast<int>(x.size());
 
@@ -76,14 +94,14 @@ PointsList STASANeighbourhoodDyn::applyRotation() {
     std::vector<double> result(D);
     for (int i = 0; i < D; ++i) {
         double dot = 0.0;
-        for (int j = 0; j < D; ++j) dot += r(rng_) * x[j];
+        for (int j = 0; j < D; ++j) dot += r(rng) * x[j];
         result[i] = x[i] + eps_rot_ * dot / (D * norm);
     }
     return clampToBounds(unflatten(result));
 }
 
 // local search along the direction of the previous step
-PointsList STASANeighbourhoodDyn::applyTranslation() {
+PointsList STASANeighbourhoodDyn::applyTranslation(std::mt19937& rng) {
     std::vector<double> x    = flatten(x_k_);
     std::vector<double> xPre = flatten(x_prev_);
     int D = static_cast<int>(x.size());
@@ -96,7 +114,7 @@ PointsList STASANeighbourhoodDyn::applyTranslation() {
     norm = std::sqrt(norm) + 1e-9;
 
     std::uniform_real_distribution<> r(0.0, 1.0);
-    double Rt = r(rng_);
+    double Rt = r(rng);
     std::vector<double> result(D);
     for (int i = 0; i < D; ++i)
         result[i] = x[i] + eps_trans_ * Rt * (x[i] - xPre[i]) / norm;
@@ -105,27 +123,27 @@ PointsList STASANeighbourhoodDyn::applyTranslation() {
 }
 
 // global multiplicative Gaussian perturbation
-PointsList STASANeighbourhoodDyn::applyScaling() {
+PointsList STASANeighbourhoodDyn::applyScaling(std::mt19937& rng) {
     std::vector<double> x = flatten(x_k_);
     int D = static_cast<int>(x.size());
 
     std::normal_distribution<> gauss(0.0, 1.0);
     std::vector<double> result(D);
     for (int i = 0; i < D; ++i)
-        result[i] = x[i] * (1.0 + eps_scale_ * gauss(rng_));
+        result[i] = x[i] * (1.0 + eps_scale_ * gauss(rng));
 
     return clampToBounds(unflatten(result));
 }
 
 // perturbs a single randomly chosen coordinate
-PointsList STASANeighbourhoodDyn::applyAxisTransf() {
+PointsList STASANeighbourhoodDyn::applyAxisTransf(std::mt19937& rng) {
     std::vector<double> x = flatten(x_k_);
     int D = static_cast<int>(x.size());
 
     std::uniform_int_distribution<> idx(0, D - 1);
     std::normal_distribution<> gauss(0.0, 1.0);
-    int k = idx(rng_);
-    x[k] *= (1.0 + eps_axis_ * gauss(rng_));
+    int k = idx(rng);
+    x[k] *= (1.0 + eps_axis_ * gauss(rng));
 
     return clampToBounds(unflatten(x));
 }

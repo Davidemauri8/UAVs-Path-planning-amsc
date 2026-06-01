@@ -2,9 +2,14 @@
 #include <algorithm>
 #include <ctime>
 
-Controller::Controller(double initial_C, int iterations) 
+Controller::Controller(double initial_C, int iterations)
     : C0(initial_C), total_iters(iterations) {
     gen.seed(static_cast<unsigned int>(std::time(nullptr)));
+}
+
+Controller::Controller(double initial_C, int iterations, unsigned seed)
+    : C0(initial_C), total_iters(iterations) {
+    gen.seed(seed);
 }
 
 //

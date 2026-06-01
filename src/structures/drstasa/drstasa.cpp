@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <omp.h>
 
 DRSTASA::Config::Config(int nWaypointsVal, double zMinVal, double zMaxVal)
     : nWaypoints(nWaypointsVal), zMin(zMinVal), zMax(zMaxVal) {}
@@ -54,61 +55,127 @@ PointsList DRSTASA::run(const Point& start, const Point& end) {
     PointsList bestPath = pop[bestIdx];
     bestFit_ = fitVals[bestIdx];
 
-    auto criterion = std::make_shared<MetropolisCriterion>();
     auto scheduler = std::make_shared<ExponentialScheduler>(
         cfg_.T0, 1e-6, 1, cfg_.alpha);
-    Controller controller(cfg_.C0, cfg_.maxIter);
 
     std::uniform_real_distribution<> uni(0.0, 1.0);
-    std::uniform_int_distribution<> neighborDist(0, popSize - 2);
 
     for (int iter = 0; iter < cfg_.maxIter; ++iter) {
 
-        // Apply all four STASA operators to each individual,
-        // keep the best candidate, and accept via Metropolis criterion
-        for (int i = 0; i < popSize; ++i) {
-            neighbourhood_.from(prevPop[i], pop[i]);
-            std::array<PointsList, 4> candidates = neighbourhood_.generateAll();
+        // ── STASA operators ──────────────────────────────────────────────────
+        // Each individual is independent: parallelise over the population.
+        // The guard prevents nesting when called from the outer cluster loop.
+        #pragma omp parallel if(!omp_in_parallel())
+        {
+            const int    tid      = omp_get_thread_num();
+            const double T        = scheduler->temp();
+            const unsigned thrSeedA = static_cast<unsigned>(iter * 1009u + tid * 9973u);
+            const unsigned thrSeedB = thrSeedA ^ 0xdeadbeef;
 
-            int    bestK      = 0;
-            double bestNewFit = evalWaypoints(candidates[0], start, end);
-            for (int k = 1; k < 4; ++k) {
-                double f = evalWaypoints(candidates[k], start, end);
-                if (f < bestNewFit) { bestNewFit = f; bestK = k; }
-            }
+            // Per-thread neighbourhood (avoids races on the shared rng_)
+            STASANeighbourhoodDyn thrNbhd(
+                cfg_.eps_rot, cfg_.eps_trans, cfg_.eps_scale, cfg_.eps_axis,
+                cfg_.xMin, cfg_.xMax, cfg_.yMin, cfg_.yMax, cfg_.zMin, cfg_.zMax,
+                thrSeedA);
 
-            double delta = bestNewFit - fitVals[i];
-            if (criterion->accept(delta, iter, scheduler->temp())) {
-                prevPop[i] = pop[i];
-                pop[i]     = candidates[bestK];
-                fitVals[i] = bestNewFit;
-                if (bestNewFit < bestFit_) {
-                    bestFit_ = bestNewFit;
-                    bestPath = candidates[bestK];
+            std::mt19937 thrRng(thrSeedB);
+            std::uniform_real_distribution<double> thrUni(0.0, 1.0);
+
+            double     localBestFit = std::numeric_limits<double>::max();
+            int        localBestIdx = -1;
+
+            #pragma omp for schedule(static)
+            for (int i = 0; i < popSize; ++i) {
+                thrNbhd.from(prevPop[i], pop[i]);
+                std::array<PointsList, 4> candidates = thrNbhd.generateAll();
+
+                int    bestK    = 0;
+                double bestNF   = evalWaypoints(candidates[0], start, end);
+                for (int k = 1; k < 4; ++k) {
+                    double f = evalWaypoints(candidates[k], start, end);
+                    if (f < bestNF) { bestNF = f; bestK = k; }
+                }
+
+                // Inline Metropolis — avoids sharing MetropolisCriterion::gen
+                const double delta    = bestNF - fitVals[i];
+                const bool   accepted = (delta < 0.0) ||
+                    (std::exp(-delta / T) >= thrUni(thrRng));
+
+                if (accepted) {
+                    prevPop[i] = pop[i];
+                    pop[i]     = candidates[bestK];
+                    fitVals[i] = bestNF;
+                    if (bestNF < localBestFit) {
+                        localBestFit = bestNF;
+                        localBestIdx = i;
+                    }
                 }
             }
-        }
 
-        // Disruption operator perturbs each individual
-        // using the global best and a random neighbour to maintain diversity
-        for (int i = 0; i < popSize; ++i) {
-            int j = neighborDist(rng_);
-            if (j >= i) ++j;
-            controller.applyDisruption(pop[i], bestPath, pop[j], iter);
-            fitVals[i] = evalWaypoints(pop[i], start, end);
-            if (fitVals[i] < bestFit_) {
-                bestFit_ = fitVals[i];
-                bestPath = pop[i];
+            // Merge thread-local best into the global best
+            if (localBestIdx >= 0) {
+                #pragma omp critical
+                {
+                    if (localBestFit < bestFit_) {
+                        bestFit_ = localBestFit;
+                        bestPath = pop[localBestIdx];
+                    }
+                }
             }
-        }
+        } // end parallel — implicit barrier guarantees bestPath is up to date
 
-        // Reverse learning is applied
+        // ── Disruption operator ───────────────────────────────────────────────
+        // Snapshot pop so each thread can safely read a random neighbour while
+        // writing its own index (Jacobi-style update, standard in parallel MH).
+        const std::vector<PointsList> popSnap = pop;
+
+        #pragma omp parallel if(!omp_in_parallel())
+        {
+            const int    tid      = omp_get_thread_num();
+            const unsigned thrSeed = static_cast<unsigned>(iter * 2003u + tid * 8191u);
+
+            // Per-thread controller keeps its own rng
+            Controller thrCtrl(cfg_.C0, cfg_.maxIter, thrSeed);
+
+            std::mt19937 thrRng(thrSeed ^ 0xcafebabe);
+            std::uniform_int_distribution<int> jDist(0, popSize - 2);
+
+            double localBestFit = std::numeric_limits<double>::max();
+            int    localBestIdx = -1;
+
+            #pragma omp for schedule(static)
+            for (int i = 0; i < popSize; ++i) {
+                int j = jDist(thrRng);
+                if (j >= i) ++j;
+
+                // write pop[i], read popSnap[j] (immutable) and bestPath (immutable)
+                thrCtrl.applyDisruption(pop[i], bestPath, popSnap[j], iter);
+                fitVals[i] = evalWaypoints(pop[i], start, end);
+
+                if (fitVals[i] < localBestFit) {
+                    localBestFit = fitVals[i];
+                    localBestIdx = i;
+                }
+            }
+
+            if (localBestIdx >= 0) {
+                #pragma omp critical
+                {
+                    if (localBestFit < bestFit_) {
+                        bestFit_ = localBestFit;
+                        bestPath = pop[localBestIdx];
+                    }
+                }
+            }
+        } // end parallel
+
+        // ── Reverse learning ─────────────────────────────────────────────────
         if (uni(rng_) > cfg_.p)
             reverseLearn_.apply(pop, fitVals,
                 [&](const PointsList& wp) { return evalWaypoints(wp, start, end); },
                 cfg_.nWaypoints);
 
-        // Update global best after all operators
+        // Sync global best after all operators
         for (int i = 0; i < popSize; ++i) {
             if (fitVals[i] < bestFit_) {
                 bestFit_ = fitVals[i];

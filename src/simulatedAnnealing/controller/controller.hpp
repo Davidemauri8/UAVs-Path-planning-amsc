@@ -17,6 +17,7 @@ private:
 
 public:
     Controller(double initial_C, int iterations);
+    Controller(double initial_C, int iterations, unsigned seed);
 
     /**
      * aplly Disruption Operator

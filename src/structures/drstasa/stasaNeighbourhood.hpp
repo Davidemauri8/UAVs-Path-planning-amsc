@@ -25,10 +25,12 @@ public:
     PointsList clampToBounds(const PointsList& path) const;
 
 private:
-    PointsList applyRotation();    // hypersphere exploration around current point
-    PointsList applyTranslation(); // local search along the previous step direction
-    PointsList applyScaling();     // global multiplicative Gaussian perturbation
-    PointsList applyAxisTransf();  // single-coordinate Gaussian perturbation
+    // Each operator accepts an explicit rng so generateAll() can call them
+    // with independent per-operator rngs in the parallel path.
+    PointsList applyRotation   (std::mt19937& rng);
+    PointsList applyTranslation(std::mt19937& rng);
+    PointsList applyScaling    (std::mt19937& rng);
+    PointsList applyAxisTransf (std::mt19937& rng);
 
     // Helpers: flatten PointsList to a flat double vector and back
     std::vector<double> flatten  (const PointsList& path) const;
