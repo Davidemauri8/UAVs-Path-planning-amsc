@@ -160,8 +160,6 @@ SegmentSAResult<NWaypoints> runSegmentSA(
 
 Budget: `stab_it × maxIter = 15 × 5000 = 75,000` fitness evaluations — matched to DRSTASA budget.
 
-The search domain is an **axis-aligned hyperrectangle** spanning the segment's bounding box in XY and `[zMin, zMax]` in altitude.
-
 ### 7b. `runSegmentSAMultiStart()` — multi-start SA
 
 ```cpp
@@ -290,80 +288,4 @@ T(k+1) = T(k) − delta
 | `Tmin` | Minimum temperature (floor) |
 | `stab_it` | Stabilisation iterations per temperature level |
 
-### ExponentialScheduler *(used throughout the project)*
-```cpp
-ExponentialScheduler(double T0, double Tmin, long stab_it, double alpha = 0.95)
-```
-T(k+1) = T(k) · alpha
-
-| Parameter | Description |
-|-----------|-------------|
-| `T0` | Initial temperature |
-| `Tmin` | Minimum temperature |
-| `stab_it` | Stabilisation iterations per temperature level |
-| `alpha` | Cooling factor ∈ (0, 1) |
-
 ---
-
-## 11. Benchmark Runner
-
-**File:** [src/testbenchmark.cpp](src/testbenchmark.cpp)
-
-Runs two experiments and writes CSV output files for plotting.
-
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `NWaypoints` | `4` | Intermediate waypoints per segment (template) |
-| `K` | `4` | Number of clusters |
-| `zMin / zMax` | `800.0 / 950.0` | Altitude band |
-| `N_RUNS` | `5` | Repetitions per configuration |
-
-**Experiment 1 — Parallelisation:**  
-Threads ∈ {1, 2, 3, 4}, all 22 obstacles. Output: `output/bench_parallel.csv`  
-Columns: `threads, run, sa_fit, drstasa_fit, wall_time`
-
-**Experiment 2 — Fitness vs obstacle count:**  
-Threads = K = 4, obstacle count swept over 7 evenly-spaced values from 0 to `maxObs` (22). Output: `output/bench_obstacles.csv`  
-Columns: `n_obstacles, run, sa_fit, drstasa_fit, wall_time`
-
-K-Means is run **once** at startup; the same cluster assignment is reused across all N_RUNS repetitions.
-
----
-
-## 12. Plot Generation
-
-**File:** [scripts/plot_results.py](scripts/plot_results.py)
-
-Reads the two benchmark CSVs and generates:
-
-| Output file | Content |
-|-------------|---------|
-| `output/plot_parallel.png` | Execution time vs number of threads (speedup annotated) |
-| `output/plot_obstacles.png` | SA vs DRSTASA total fitness vs number of obstacles (±1σ bands) |
-
-Run from any directory:
-```bash
-python scripts/plot_results.py
-```
-
----
-
-## 13. Quick Reference — What to Change and Where
-
-| What to change | File | Function / line |
-|----------------|------|-----------------|
-| Number of UAVs K | [src/testiceland.cpp](src/testiceland.cpp) | `constexpr int K` |
-| Waypoints per segment | [src/testiceland.cpp](src/testiceland.cpp) | `constexpr int NWaypoints` |
-| Flight altitude band | [src/testiceland.cpp](src/testiceland.cpp) | `const double zMin, zMax` |
-| Fitness weights (b1–b4, a1–a2) | [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) | `sampleFitnessWeights()` |
-| Drone radius | [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) | `sampleFitnessWeights()` → `droneRadius` |
-| Obstacles | [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) | `buildDefaultObstacles()` |
-| DRSTASA parameters | [src/structures/functions/fitnessUtilities.cpp](src/structures/functions/fitnessUtilities.cpp) | `GetConfigurationDRST()` |
-| SA iterations per segment | [src/structures/segment/segmentOptimizer.hpp](src/structures/segment/segmentOptimizer.hpp) | `runSegmentSAMultiStart()` → `maxIterPerRestart`, `nRestarts` |
-| SA scheduler (per segment) | [src/structures/segment/segmentOptimizer.hpp](src/structures/segment/segmentOptimizer.hpp) | `runSegmentSA()` → `ExponentialScheduler(...)` |
-| TSP-SA iterations | [src/structures/pipeline/pipelineRunner.hpp](src/structures/pipeline/pipelineRunner.hpp) | `TspSA(..., 500)` |
-| TSP-SA scheduler | [src/structures/pipeline/pipelineRunner.hpp](src/structures/pipeline/pipelineRunner.hpp) | `ExponentialScheduler(100.0, 0.01, 200, 0.95)` |
-| K-Means max iterations | [src/testiceland.cpp](src/testiceland.cpp) | `KMeans(K, 100)` |
-| Segment bounding box margins | [src/structures/segment/segmentOptimizer.hpp](src/structures/segment/segmentOptimizer.hpp) | `computeBounds()` → `marginFactor`, `marginMin` |
-| Number of OMP threads | [src/testiceland.cpp](src/testiceland.cpp) | `runPipelineOptimization<NWaypoints>(..., /*numThreads=*/K)` |
-| Benchmark repetitions | [src/testbenchmark.cpp](src/testbenchmark.cpp) | `N_RUNS` |

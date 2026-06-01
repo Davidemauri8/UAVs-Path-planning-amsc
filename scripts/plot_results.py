@@ -38,7 +38,7 @@ for t, m in zip(threads, mean_t.values):
 
 ax.set_xlabel('Number of threads')
 ax.set_ylabel('Execution time (s)')
-ax.set_title(f'Parallel scaling  (K={int(threads[-1])} clusters, {n_runs} runs/config)')
+ax.set_title(f'Parallel scaling')
 ax.set_xticks(threads)
 ax.grid(True, alpha=0.3, linestyle='--')
 fig.tight_layout()
@@ -71,8 +71,8 @@ ax1.fill_between(x, dr_mean - dr_std, dr_mean + dr_std,
                  color='steelblue', alpha=0.18)
 
 ax1.set_xlabel('Number of obstacles')
-ax1.set_ylabel('Total fitness  (lower is better)')
-ax1.set_title(f'SA vs DRSTASA — fitness vs number of obstacles  ({n_runs2} runs/config)')
+ax1.set_ylabel('Fitness function')
+ax1.set_title(f'SA vs DRSTASA')
 ax1.set_xticks(x)
 ax1.legend()
 ax1.grid(True, alpha=0.3, linestyle='--')
