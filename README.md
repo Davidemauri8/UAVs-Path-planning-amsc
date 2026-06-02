@@ -84,14 +84,14 @@ Each run of `testiceland` produces the following files in `output/`:
 
 The 21 GPS survey targets (WP1–WP21) cover the full island from the Reykjanes peninsula to the eastern fjords. The red cylindrical volumes are the no-fly zones corresponding to Icelandic volcanic massifs and glaciers.
 
-![Waypoints and obstacles](output/target_point.png)
+![Waypoints and obstacles](documentation/photos/target_point.png)
 
 ---
 
 ### DRSTASA optimized paths
 
 Optimization by DRSTASA. The population-based search explores a wider neighbourhood per segment; intermediate points differ most around dense obstacle zones.
-![DRSTASA output](output/drstasa.png)
+![DRSTASA output](documentation/photos/drstasa.png)
 
 ---
 
