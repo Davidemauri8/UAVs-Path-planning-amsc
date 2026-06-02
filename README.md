@@ -1,4 +1,4 @@
-# UAV Path Planning — AMSC Project
+# UAVs Path Planning — AMSC Project
 
 A C++ framework for multi-objective UAV path planning in obstacle-laden environments. The system optimizes intermediate waypoints between a set of georeferenced survey targets by combining K-means clustering, TSP-based ordering, and two competing segment-level metaheuristics: classic multi-start Simulated Annealing (SA) and DRSTASA.
 
