@@ -27,7 +27,6 @@ Three executables are produced inside `build/`:
 |------------|---------|
 | `testiceland` | Runs SA + DRSTASA, exports all KML / CSV files |
 | `testobstacles` | Exports only the obstacle geometry to KML |
-| `testbenchmark` | Three benchmark experiments (parallelization, obstacle scaling, K-scaling) |
 
 ---
 
@@ -73,8 +72,6 @@ Each run of `testiceland` produces the following files in `output/`:
 | `iceland_comparison.kml` | Side-by-side overlay of both algorithms + obstacles |
 | `iceland_clusters.csv` | GPS coordinates of all waypoints (targets + intermediates) |
 | `iceland_obstacles.kml` | Obstacle cylinders only (`testobstacles`) |
-
-`testbenchmark` additionally writes `bench_parallel.csv`, `bench_obstacles.csv`, and `bench_scaling.csv`.
 
 ---
 
