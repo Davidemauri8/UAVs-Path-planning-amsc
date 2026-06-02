@@ -14,7 +14,7 @@ static constexpr int    NWaypoints   = 4;
 static constexpr int    K_DEFAULT    = 4;
 static constexpr double zMin         = 800.0;
 static constexpr double zMax         = 950.0;
-static constexpr int    N_RUNS       = 5;
+static constexpr int    N_RUNS       = 1;
 
 // This software module serves as the entry-point for the experimental
 // validation of route optimization algorithms for multi-UAV.
@@ -30,7 +30,7 @@ int main()
     const GeoOrigin origin = {63.985, -22.605};
 
     std::cout << "Loading points...\n";
-    PointsList rawPoints = PointsListReader::readCSV("../data/input_iceland.csv");
+    PointsList rawPoints = PointsListReader::readCSV("../data/input_scal.csv");
     if (rawPoints.size() == 0) {
         std::cerr << "ERROR: could not load input_iceland.csv\n";
         return 1;
@@ -80,31 +80,9 @@ int main()
         }
         std::cout << "-> ../output/bench_parallel.csv\n\n";
 
-        // ── Amdahl's law estimate ─────────────────────────────────────────
-        // f = (p/S_p - 1) / (p - 1)  where S_p = T_1 / T_p
-        std::cout << "Amdahl serial-fraction estimate:\n";
-        double T1 = meanWall[0];
-        double fSum = 0.0;
-        int    fCount = 0;
-        for (size_t ti = 1; ti < threadCounts.size(); ++ti) {
-            int    p  = threadCounts[ti];
-            double Sp = T1 / meanWall[ti];
-            double f  = (static_cast<double>(p) / Sp - 1.0) /
-                        (static_cast<double>(p) - 1.0);
-            f = std::max(0.0, std::min(1.0, f));   // clamp to [0,1]
-            std::cout << "  p=" << p
-                      << "  speedup=" << std::fixed << std::setprecision(2) << Sp
-                      << "  f_serial=" << std::fixed << std::setprecision(4) << f
-                      << "\n";
-            fSum += f; ++fCount;
-        }
-        const double fMean = fSum / fCount;
-        const double maxSpeedup = 1.0 / fMean;
-        std::cout << "  mean f_serial = " << std::fixed << std::setprecision(4) << fMean
-                  << "  => theoretical max speedup = "
-                  << std::fixed << std::setprecision(1) << maxSpeedup << "x\n\n";
     }
-
+}; 
+/*
     // ── Experiment 2: fitness vs number of obstacles ──────────────────────────
     {
         const int maxObs  = static_cast<int>(buildDefaultObstacles().size());
@@ -184,3 +162,4 @@ int main()
 
     return 0;
 }
+*/
