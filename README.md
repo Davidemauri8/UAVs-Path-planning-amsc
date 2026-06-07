@@ -21,7 +21,7 @@ cmake ..
 make
 ```
 
-Three executables are produced inside `build/`:
+Two executables are produced inside `build/`:
 
 | Executable | Purpose |
 |------------|---------|
