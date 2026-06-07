@@ -88,7 +88,7 @@ double FitnessFunction::f4_smoothness(const PointsList& path) const {
     return w_.a1 * sumPhi + w_.a2 * sumPsi;
 }
 
-// evaluate: assembles the total fitness score.
+// assembles the total fitness score.
 // F2 and F3 are evaluated first to short-circuit on illegal paths before
 // computing the more expensive F1 and F4.
 double FitnessFunction::evaluate(const PointsList& path) const {
