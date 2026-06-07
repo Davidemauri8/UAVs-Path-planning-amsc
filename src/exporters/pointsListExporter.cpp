@@ -467,4 +467,4 @@ void PointsListExporter::writeKMLComparison(
 
     //std::cout << "KML comparison scritto: " << filename
     //          << " (" << nClusters << " cluster)" << std::endl;
-}
+}// review

@@ -66,4 +66,4 @@ void Controller::applyDisruption(PointsList& current, const PointsList& best, co
 
         current.replacePoint(i, Point(newX, newY, newZ, current.extractPoint(i).getCluster()));
     }
-}
+}// review

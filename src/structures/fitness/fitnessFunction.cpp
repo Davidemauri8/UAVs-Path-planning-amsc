@@ -105,3 +105,4 @@ double FitnessFunction::evaluate(const PointsList& path) const {
 
     return w_.b1 * f1 + w_.b2 * f2 + w_.b3 * f3 + w_.b4 * f4;
 }
+// review

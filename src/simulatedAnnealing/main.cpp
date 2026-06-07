@@ -51,4 +51,4 @@ int main() {
 
 	const auto point = ssa.run(quintic, low, lower_policy);
 	std::cout << "Final result of the serial algorithm: " << point << std::endl;
-}
+}// review

@@ -38,3 +38,4 @@ double CylinderObstacle::segmentCost(const Point& A, const Point& B, double dron
     else
         return softRadius - d_k; // linear penalty inside the buffer zone
 }
+// review

@@ -72,3 +72,4 @@ PointsList Lhs::generatePopulation() {
     shuffleSamples();
     return getSample();
 }
+// review
