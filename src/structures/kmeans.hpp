@@ -29,6 +29,9 @@ private:
         for (int i = 0; i < K; ++i) {
             int randomIndex = dis(gen);
 			Point randomP = points.extractPoint(randomIndex);
+            // NOTE: you are extracting samples with replacement, so duplicates are possible. This is not necessarily an error, but it is a design choice that can lead to empty clusters and slower convergence.
+            // maybe consider shuffling the dataset and taking the first K points instead for a simple deterministic sampling without replacement
+            // to avoid duplicate centroids.
             centroids.addPoint({randomP.getX(), randomP.getY(), randomP.getZ(), randomP.getCluster()});
         }
     }
@@ -71,7 +74,13 @@ public:
             std::vector<int> counts(K, 0);
 
             for (int i = 0; i<points.size(); ++i) {
-				Point p = points.extractPoint(i);
+				// NOTE here you could have used
+                // const Point p = points.extractPoint(i);
+                // since you are not modifying the point, or even
+                // const Point& p = points.extractPoint(i);
+                // to avoid copying the point data and just reference it directly.
+                // This note applies also elsewhere.
+                Point p = points.extractPoint(i);
 				int c = p.getCluster();
 
 				if(c >= 0 && c<K){

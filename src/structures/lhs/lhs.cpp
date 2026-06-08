@@ -21,6 +21,10 @@ void Lhs::generatePartitions(){
     double dy = (yMax-yMin)/n;
     double dz = (zMax-zMin)/n;
 
+    // REVIEW: Reseeding from `random_device` here defeats the deterministic seed path
+    // set by DRSTASA/SA callers, so runs are not reproducible even when a seed is provided.
+    // Maybe it is intentional. But it is worth noting that this is a design choice 
+    //that adds external entropy to the population generation process and can make debugging harder.
     gen.seed(std::random_device{}());
 
     // Draw one uniform random sample from each of the n intervals for x, y, z.
@@ -44,6 +48,8 @@ void Lhs::generatePartitions(){
 }
 
 void Lhs::shuffleSamples(){
+    // REVIEW: This second reseed makes the initial population depend on external entropy twice
+    // per call and adds overhead in a hot path; keep one caller-controlled generator instead.
     gen.seed(std::random_device{}());
     std::shuffle(xSamples.begin(), xSamples.end(), gen);
     std::shuffle(ySamples.begin(), ySamples.end(), gen);
