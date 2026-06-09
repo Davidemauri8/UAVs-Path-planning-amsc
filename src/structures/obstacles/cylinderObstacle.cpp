@@ -15,6 +15,11 @@ double CylinderObstacle::distance(Drone* drone) const {
 }
 
 double CylinderObstacle::segmentCost(const Point& A, const Point& B, double droneRadius) const {
+    // The collision test is purely 2D. `height` is ignored here, so a segment can be
+    // penalized or rejected even when both endpoints fly above the cylinder top.
+    // This is a conservative approximation, but it simplifies 
+    // the math and is still effective, so it is not an errror but a 
+    // design choice.
     // Find the closest point on segment to the cylinder center
     Point v = B.diff(A);
     Point w = center.diff(A);

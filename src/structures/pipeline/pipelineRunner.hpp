@@ -121,6 +121,10 @@ BenchmarkResult runPipelineOptimization(
         const double tCrit0 = omp_get_wtime();
         #pragma omp critical
         {
+            // This appends clusters in thread-completion order, not cluster index order.
+            // With `schedule(dynamic)` the raw `saPath` / `drstasaPath` become nondeterministic
+            // and can export a mission path with clusters shuffled between runs.
+            // It is not necessarily an error. But it is useful to note.
             appendPath(saPath, localSA);
             appendPath(drstasaPath, localDRS);
             saPerCluster[k]      = localSA;
